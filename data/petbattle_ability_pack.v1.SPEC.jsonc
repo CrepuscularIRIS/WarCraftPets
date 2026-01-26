@@ -1,0 +1,66 @@
+// ============================================================
+// SPEC: petbattle-ability-pack.v1 (JSONC)
+// ------------------------------------------------------------
+// 这是“结构规范 + 字段约束 + 执行约定”的说明文件，用于团队协作与长期维护。
+// ============================================================
+
+{
+  "format": "petbattle-ability-pack",
+  "version": 1,
+
+  "design_goals": [
+    "Ability 为中心对象：Ability→Turn→Effect→OpcodeSchema，并闭包连接 State/AbilityState",
+    "运行时高效：O(1) ability/opcode/state 索引；不做字符串 split；按 order_index 直接执行",
+    "可演进：opcode_semantics 作为独立语义层，逐步补齐高频 opcode"
+  ],
+
+  "release_vs_debug": {
+    "release": {
+      "emit_params": false,
+      "omit_empty_triggers": true,
+      "notes": "训练/RL/批量模拟优先：体积小、加载快。"
+    },
+    "debug": {
+      "emit_params": true,
+      "omit_empty_triggers": true,
+      "notes": "人工审查/回归对照：params 便于理解参数含义。"
+    }
+  },
+
+  "ability_object": {
+    "required": [
+      "ability_id", "kind", "name.en",
+      "pet_type_enum", "cooldown", "flags",
+      "icon_file_data_id", "visual_id",
+      "ability_states", "compiled_hints"
+    ],
+    "kind_values": ["ACTIVE", "AURA", "PASSIVE_STATE_ONLY"],
+    "cast": {
+      "optional": true,
+      "structure": "cast.turns[]：按 turn_order_index 升序。每个 turn 内 effects[] 按 order 升序。"
+    },
+    "triggers": {
+      "optional": true,
+      "structure": "triggers.by_event[eventType] = [turn...]。建议省略空 triggers。"
+    }
+  },
+
+  "effect_object": {
+    "required": ["effect_id", "opcode_id", "order", "aura_ability_id", "params_raw", "visual_id"],
+    "params_raw": "固定长度 6，对应 Param1..Param6。不足补 0，多余截断。",
+    "params": "仅 debug 输出：按 opcode.param_schema 将 params_raw 映射成可读字典。"
+  },
+
+  "opcode_object": {
+    "required": ["opcode_id", "param_schema", "opcode_semantics"],
+    "param_schema": "由 BattlePetEffectProperties.ParamLabel/ParamTypeEnum 生成：pos(1..6), k(label), t(type).",
+    "opcode_semantics": "你引擎语义层：handler/default_target/can_miss/periodic_policy/...（可用 overrides 维护）。"
+  },
+
+  "validation_rules": [
+    "effect.opcode_id 必须存在于 opcodes（缺失则插入 opcode 0/UNIMPLEMENTED 或告警）",
+    "APPLY_AURA 类 opcode（requires_aura_ability_id=true）必须携带 effect.aura_ability_id != 0",
+    "effect.aura_ability_id != 0 时，该 ability_id 必须在 abilities 中存在（闭包）",
+    "ability_states[].state_id 必须存在于 states 中（闭包）"
+  ]
+}

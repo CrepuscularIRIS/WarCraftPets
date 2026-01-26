@@ -1,0 +1,49 @@
+// ============================================================
+// opcode_semantics_overrides (JSONC)
+// 用途：
+//   维护 BattlePetEffectPropertiesID(opcode_id) → 引擎 handler/目标/命中/周期/叠层 等“语义层”映射。
+//
+// 使用方式（生成器）：
+//   1) 先从 DB2 生成基础 opcodes[].param_schema（仅字段名/类型）
+//   2) 再把本文件中 overrides[opcode_id] merge 到 opcodes[].opcode_semantics
+//
+// 注意：
+//   DB2 并不提供完整语义；你必须逐步补齐高频 opcode（Top N）。
+// ============================================================
+
+{
+  "overrides": {
+    "0": {
+      "handler": "NOOP",
+      "default_target": "NONE",
+      "can_miss": false,
+      "notes": "占位/空效果。"
+    },
+
+    "24": {
+      "handler": "DMG_STD",
+      "default_target": "ENEMY_ACTIVE",
+      "can_miss": true,
+      "periodic_policy": "IF_PARAM_IsPeriodic_THEN_TICK",
+      "notes": "标准伤害；IsPeriodic=1 通常用于 DOT tick。"
+    },
+
+    "31": {
+      "handler": "SET_STATE",
+      "default_target": "SELF_ACTIVE",
+      "can_miss": false,
+      "notes": "设置/修改 BattlePetState（需你按实际技能语义细化一次性/持续）。"
+    },
+
+    "54": {
+      "handler": "APPLY_AURA",
+      "default_target": "ENEMY_ACTIVE",
+      "can_miss": true,
+      "requires_aura_ability_id": true,
+      "notes": "挂载 aura ability（AuraBattlePetAbilityID）。Duration 常在 Param3。"
+    }
+
+    // TODO: 继续补齐高频 opcode，例如：
+    // "136": {"handler": "DONT_MISS", "default_target": "SELF_ACTIVE", "can_miss": false, "notes": "..."}
+  }
+}

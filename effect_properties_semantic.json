@@ -1,0 +1,1900 @@
+{
+  "137": {
+    "applies_aura": "target",
+    "can_miss": true,
+    "confidence": "medium",
+    "meaning_en": "Applies AuraBattlePetAbilityID to the target for Duration rounds (no explicit Accuracy parameter in this bundle), gated by exact state value checks on the caster and/or target. When the gate fails or the hitcheck misses, ChainFailure controls whether remaining effects stop.",
+    "meaning_zh": "将 AuraBattlePetAbilityID 对应光环施加到目标并持续 Duration 回合（本包中无显式 Accuracy 参数），但会对施法者/目标做状态值精确匹配门控（CasterState==CasterStateValue、TargetState==TargetStateValue）。门控失败或未命中时，由 ChainFailure 控制是否中止后续效果。",
+    "opcode_id": 137,
+    "opcode_name": "AURA_APPLY_DURATION_REQ_STATE_VALUE",
+    "param_label": "CasterState,CasterStateValue,Duration,TargetState,TargetStateValue,ChainFailure"
+  },
+  "149": {
+    "can_miss": true,
+    "confidence": "high",
+    "meaning_en": "Standard points-based damage (Points, Accuracy, IsPeriodic) but cannot reduce target HP below 1 (non-lethal).",
+    "meaning_zh": "标准点数伤害（Points,Accuracy,IsPeriodic），但该伤害不能将目标生命值降到 1 以下（非致死）。",
+    "opcode_id": 149,
+    "opcode_name": "DMG_POINTS_NONLETHAL",
+    "param_label": "Points,Accuracy,IsPeriodic,,,"
+  },
+  "160": {
+    "can_miss": true,
+    "confidence": "high",
+    "meaning_en": "Deals standard damage (Points, Accuracy) only if the user attacks first this round. Typically used as the bonus-hit portion of \"strikes first\" abilities (e.g., Arcane Slash, Scrabble).",
+    "meaning_zh": "仅当施法者在本回合先手行动时，才造成标准伤害（Points,Accuracy）。通常作为\"先手额外伤害\"技能的第二段（如 Arcane Slash、Scrabble）。",
+    "opcode_id": 160,
+    "opcode_name": "DMG_BONUS_IF_FIRST",
+    "param_label": "Points,Accuracy,,,,"
+  },
+  "75": {
+    "applies_aura": "self",
+    "can_miss": true,
+    "confidence": "medium",
+    "meaning_en": "On hit, deals standard damage (Points, Accuracy) and applies the referenced AuraBattlePetAbilityID as a self aura/marker with permanent duration (-1). Commonly used as a gating marker for follow-up logic (e.g., Launch Rocket → Setup Rocket).",
+    "meaning_zh": "命中后造成标准伤害（Points,Accuracy），并将 AuraBattlePetAbilityID 指定的光环/标记施加到施法者自身（永久/-1）。常用于“标记/准备状态”以驱动后续技能逻辑（如 Launch Rocket→Setup Rocket）。",
+    "opcode_id": 75,
+    "opcode_name": "DMG_APPLY_AURA_SELF_ON_HIT",
+    "param_label": "Points,Accuracy,,,,"
+  },
+  "77": {
+    "applies_aura": "target",
+    "can_miss": true,
+    "confidence": "medium",
+    "meaning_en": "On hit, applies AuraBattlePetAbilityID to the target for Duration rounds (Duration=0 treated as permanent). Stores Points as an aura payload and (by default) binds it to Mod_DamageTakenPercent (state 24) so damage resolution can consume it (e.g., Lock-On → Locked On).",
+    "meaning_zh": "命中后将 AuraBattlePetAbilityID 对应光环施加到目标，持续 Duration 回合（Duration=0 视为永久/-1）。Points 作为光环数值载荷写入 aura.meta，并默认绑定到状态 Mod_DamageTakenPercent(24) 以参与伤害结算（典型：Lock-On→Locked On）。",
+    "opcode_id": 77,
+    "opcode_name": "AURA_APPLY_DURATION_POINTS",
+    "param_label": "Points,Accuracy,Duration,,,"
+  },
+  "damage_pipeline": {
+    "steps": [
+      {
+        "desc": "Hit check (may short-circuit).",
+        "id": "S0"
+      },
+      {
+        "desc": "Base damage from points/power or pctHP reference.",
+        "id": "S1"
+      },
+      {
+        "desc": "Attacker % modifiers; Beast/Dragon gating typical.",
+        "id": "S2"
+      },
+      {
+        "desc": "Target % modifiers.",
+        "id": "S3"
+      },
+      {
+        "desc": "Flat modifiers; clamp at 0.",
+        "id": "S4"
+      },
+      {
+        "desc": "Type advantage (1.5, 2/3, 1.0).",
+        "id": "S5"
+      },
+      {
+        "desc": "Weather/environment modifier; Elemental filters negative.",
+        "id": "S6"
+      },
+      {
+        "desc": "Variance [0.95,1.05] or overridden by properties.",
+        "id": "S7"
+      },
+      {
+        "desc": "Crit (x1.5).",
+        "id": "S8"
+      },
+      {
+        "desc": "Caps & death interceptors (Magic cap; Undead clip).",
+        "id": "S9"
+      },
+      {
+        "desc": "Final output; non-negative clamp.",
+        "id": "S10"
+      }
+    ]
+  },
+  "generated_utc": "2025-12-26T14:25:55Z",
+  "nodes": [
+    {
+      "desc": "Builds DamageEvent and runs Step0..Step10 pipeline.",
+      "id": "Node-DMG"
+    },
+    {
+      "desc": "Accuracy/DontMiss/Immunity context for hit checks (Step0).",
+      "id": "Node-ACC"
+    },
+    {
+      "desc": "Applies/refreshes auras, duration/stack rules, tick scheduling.",
+      "id": "Node-AURA"
+    },
+    {
+      "desc": "State variable set/add/clamp used for branching and modifiers.",
+      "id": "Node-STATE"
+    },
+    {
+      "desc": "Flow control gates: chance/conditions/chain_failure.",
+      "id": "Node-GATE"
+    },
+    {
+      "desc": "Weather set/replace; impacts Step6.",
+      "id": "Node-WEATHER"
+    },
+    {
+      "desc": "Delayed trigger scheduling and firing.",
+      "id": "Node-TIMER"
+    },
+    {
+      "desc": "Post-damage hooks (lifesteal/heal-after-hit).",
+      "id": "Node-POST"
+    },
+    {
+      "desc": "Death resolution and resurrection flow.",
+      "id": "Node-DEATH"
+    },
+    {
+      "desc": "Pet racial passive system (MagicCap/UndeadClip/etc).",
+      "id": "Node-PASSIVE"
+    },
+    {
+      "desc": "Battle orchestrator (initiative, priority markers).",
+      "id": "Node-BTL"
+    },
+    {
+      "desc": "Battle orchestrator (initiative, priority markers).",
+      "id": "Node-BTL"
+    }
+  ],
+  "properties": [
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "even_more_points": "int",
+        "more_points": "int",
+        "points": "int"
+      },
+      "category": "TIMER_TRIG",
+      "examples": [
+        {
+          "ability_id": 217,
+          "name": "Curse of Doom",
+          "rows": 4
+        },
+        {
+          "ability_id": 601,
+          "name": "Time Bomb",
+          "rows": 3
+        },
+        {
+          "ability_id": 1759,
+          "name": "Creeping Insanity",
+          "rows": 3
+        }
+      ],
+      "freq_count": 61,
+      "freq_pct": 2.185597,
+      "nodes": [
+        "Node-TIMER"
+      ],
+      "notes": [
+        "Timer trigger / countdown placeholder used to schedule delayed effects.",
+        "Requires TimerScheduler keyed by (source_aura/effect) and an explicit event to fire."
+      ],
+      "param_label": "Points,MorePoints,EvenMorePoints,,,",
+      "prop_id": 22,
+      "test_ids": [
+        "UT-OP22-001",
+        "UT-OP22-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "points": "int",
+        "variance": "int|float"
+      },
+      "category": "DMG_POINTS_VARIANCE",
+      "examples": [
+        {
+          "ability_id": 2503,
+          "name": "Elune's Grace",
+          "rows": 3
+        },
+        {
+          "ability_id": 1736,
+          "name": "For Adventure!",
+          "rows": 3
+        },
+        {
+          "ability_id": 979,
+          "name": "Moon Tears",
+          "rows": 3
+        }
+      ],
+      "freq_count": 115,
+      "freq_pct": 4.120387,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Damage with explicit variance parameter; overrides default variance behaviour at S7."
+      ],
+      "param_label": "Points,Accuracy,Variance,,,",
+      "prop_id": 23,
+      "test_ids": [
+        "UT-OP23-001",
+        "UT-OP23-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "is_periodic": "int(0/1)",
+        "override_index": "int|null",
+        "points": "int"
+      },
+      "category": "DMG_POINTS_STD",
+      "examples": [
+        {
+          "ability_id": 2088,
+          "name": "Rocket Barrage",
+          "rows": 24
+        },
+        {
+          "ability_id": 2334,
+          "name": "Flock X",
+          "rows": 15
+        },
+        {
+          "ability_id": 2366,
+          "name": "MAYHEM",
+          "rows": 12
+        }
+      ],
+      "freq_count": 941,
+      "freq_pct": 33.715514,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Core damage/heal carrier. IsPeriodic=1 indicates tick event for DoT/HoT.",
+        "Multi-hit: each hit is an independent DamageEvent and must run full S0..S10."
+      ],
+      "param_label": "Points,Accuracy,IsPeriodic,OverrideIndex,,",
+      "prop_id": 24,
+      "test_ids": [
+        "UT-OP24-001",
+        "UT-OP24-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "duration": "int",
+        "tickdown_first_round": "int(0/1)"
+      },
+      "category": "AURA_APPLY_DURATION",
+      "examples": [
+        {
+          "ability_id": 1679,
+          "name": "Smoke Bomb",
+          "rows": 3
+        },
+        {
+          "ability_id": 1040,
+          "name": "Nimbus",
+          "rows": 3
+        },
+        {
+          "ability_id": 252,
+          "name": "Uncanny Luck",
+          "rows": 3
+        }
+      ],
+      "freq_count": 237,
+      "freq_pct": 8.49158,
+      "nodes": [
+        "Node-AURA",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Applies aura with duration and tick-down semantics; does not directly compute damage.",
+        "Tick events typically reference DMG props such as 24/62 on EVT_TURN_START/END."
+      ],
+      "param_label": "Unused,Accuracy,Duration,TickDownFirstRound,,",
+      "prop_id": 26,
+      "test_ids": [
+        "UT-OP26-001",
+        "UT-OP26-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "points": "int",
+        "points_increase_per_use": "int",
+        "points_max": "int",
+        "state_to_trigger_max_points": "int"
+      },
+      "category": "DMG_RAMPING",
+      "examples": [
+        {
+          "ability_id": 156,
+          "name": "Vicious Fang",
+          "rows": 1
+        },
+        {
+          "ability_id": 2067,
+          "name": "Pinch",
+          "rows": 1
+        },
+        {
+          "ability_id": 2473,
+          "name": "Otter Breath",
+          "rows": 1
+        }
+      ],
+      "freq_count": 21,
+      "freq_pct": 0.752418,
+      "nodes": [
+        "Node-STATE",
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Ramping points by use count/state; clamps to points_max; optional state triggers max immediately."
+      ],
+      "param_label": "Points,Accuracy,PointsIncreasePerUse,PointsMax,StateToTriggerMaxPoints,",
+      "prop_id": 27,
+      "test_ids": [
+        "UT-OP27-001",
+        "UT-OP27-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "duration": "int",
+        "tickdown_first_round": "int(0/1)"
+      },
+      "category": "AURA_APPLY_DURATION_SPECIAL",
+      "examples": [
+        {
+          "ability_id": 1101,
+          "name": "Shieldstorm",
+          "rows": 3
+        },
+        {
+          "ability_id": 1125,
+          "name": "Portal",
+          "rows": 1
+        },
+        {
+          "ability_id": 2465,
+          "name": "Furious Surge",
+          "rows": 1
+        }
+      ],
+      "freq_count": 29,
+      "freq_pct": 1.039054,
+      "nodes": [
+        "Node-AURA",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Aura application that may allow special duration values (e.g., -1 for permanent)."
+      ],
+      "param_label": "Unused,Accuracy,Duration,TickDownFirstRound,,",
+      "prop_id": 28,
+      "test_ids": [
+        "UT-OP28-001",
+        "UT-OP28-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "is_periodic": "int(0/1)",
+        "points": "int",
+        "required_caster_state": "int",
+        "required_target_state": "int"
+      },
+      "category": "DMG_REQUIRED_STATE",
+      "examples": [
+        {
+          "ability_id": 120,
+          "name": "Howling Blast",
+          "rows": 3
+        },
+        {
+          "ability_id": 1013,
+          "name": "Call of Winter",
+          "rows": 3
+        },
+        {
+          "ability_id": 250,
+          "name": "Spiderling Swarm",
+          "rows": 2
+        }
+      ],
+      "freq_count": 23,
+      "freq_pct": 0.824077,
+      "nodes": [
+        "Node-GATE",
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Damage only if required states satisfied; otherwise no DamageEvent and no post hooks."
+      ],
+      "param_label": "Points,Accuracy,RequiredCasterState,RequiredTargetState,IsPeriodic,",
+      "prop_id": 29,
+      "test_ids": [
+        "UT-OP29-001",
+        "UT-OP29-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "state": "int",
+        "state_value": "int"
+      },
+      "category": "STATE_SET",
+      "examples": [
+        {
+          "ability_id": 941,
+          "name": "High Fiber",
+          "rows": 6
+        },
+        {
+          "ability_id": 2528,
+          "name": "Void Burst",
+          "rows": 4
+        },
+        {
+          "ability_id": 593,
+          "name": "Surge of Power",
+          "rows": 4
+        }
+      ],
+      "freq_count": 86,
+      "freq_pct": 3.081333,
+      "nodes": [
+        "Node-STATE"
+      ],
+      "notes": [
+        "Sets a state variable (overwrite semantics, not add). Often used as branch input for later effects."
+      ],
+      "param_label": "State,StateValue,,,,",
+      "prop_id": 31,
+      "test_ids": [
+        "UT-OP31-001",
+        "UT-OP31-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "chain_failure": "int(0/1)",
+        "points": "int"
+      },
+      "category": "POST_DAMAGE_LIFESTEAL",
+      "examples": [
+        {
+          "ability_id": 2263,
+          "name": "Torment",
+          "rows": 3
+        },
+        {
+          "ability_id": 2457,
+          "name": "Blood Harvest",
+          "rows": 3
+        },
+        {
+          "ability_id": 2301,
+          "name": "Necrotic Bomb",
+          "rows": 3
+        }
+      ],
+      "freq_count": 25,
+      "freq_pct": 0.895736,
+      "nodes": [
+        "Node-POST",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Post-damage heal/lifesteal style effect, gated on last damage dealt > 0.",
+        "Multi-hit semantics must be defined: per-hit or per-ability (SRS must lock one)."
+      ],
+      "param_label": "Points,Accuracy,ChainFailure,,,",
+      "prop_id": 32,
+      "test_ids": [
+        "UT-OP32-001",
+        "UT-OP32-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "chance": "int|float"
+      },
+      "category": "GATE_CHANCE_OR_PHASE",
+      "examples": [
+        {
+          "ability_id": 2388,
+          "name": "Mind Games: Health",
+          "rows": 9
+        },
+        {
+          "ability_id": 2390,
+          "name": "Mind Games: Ability Lockout",
+          "rows": 9
+        },
+        {
+          "ability_id": 2389,
+          "name": "Mind Games: Stun",
+          "rows": 9
+        }
+      ],
+      "freq_count": 129,
+      "freq_pct": 4.621999,
+      "nodes": [
+        "Node-GATE"
+      ],
+      "notes": [
+        "Chance gate for executing the current effect (or phase-related effect).",
+        "Must consume RNG gate roll and be replayable under fixed seed."
+      ],
+      "param_label": "Chance,unused,,,,",
+      "prop_id": 49,
+      "test_ids": [
+        "UT-OP49-001",
+        "UT-OP49-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "caster_state": "int",
+        "chain_failure": "int(0/1)",
+        "duration": "int",
+        "max_allowed": "int",
+        "target_state": "int"
+      },
+      "category": "AURA_APPLY_COND_STACK_LIMIT",
+      "examples": [
+        {
+          "ability_id": 2387,
+          "name": "Mind Games",
+          "rows": 9
+        },
+        {
+          "ability_id": 1367,
+          "name": "Greater Apocalypse",
+          "rows": 3
+        },
+        {
+          "ability_id": 964,
+          "name": "Autumn Breeze",
+          "rows": 3
+        }
+      ],
+      "freq_count": 193,
+      "freq_pct": 6.915084,
+      "nodes": [
+        "Node-AURA",
+        "Node-GATE",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Applies aura gated by caster/target states, with stack/instance limit.",
+        "chain_failure defines whether failing this effect stops the remaining effects in the same Turn."
+      ],
+      "param_label": "ChainFailure,Accuracy,Duration,MaxAllowed,CasterState,TargetState",
+      "prop_id": 50,
+      "test_ids": [
+        "UT-OP50-001",
+        "UT-OP50-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "chain_failure": "int(0/1)",
+        "duration": "int"
+      },
+      "category": "AURA_APPLY_SIMPLE",
+      "examples": [
+        {
+          "ability_id": 175,
+          "name": "Volcano",
+          "rows": 2
+        },
+        {
+          "ability_id": 762,
+          "name": "Haymaker",
+          "rows": 1
+        },
+        {
+          "ability_id": 775,
+          "name": "Perfumed Arrow",
+          "rows": 1
+        }
+      ],
+      "freq_count": 44,
+      "freq_pct": 1.576496,
+      "nodes": [
+        "Node-AURA",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Simple aura application with duration; chain_failure controls effect flow on failure."
+      ],
+      "param_label": "ChainFailure,Accuracy,Duration,,,",
+      "prop_id": 52,
+      "test_ids": [
+        "UT-OP52-001",
+        "UT-OP52-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "chain_failure": "int(0/1)",
+        "duration": "int",
+        "max_allowed": "int"
+      },
+      "category": "AURA_APPLY_STACK_LIMIT",
+      "examples": [
+        {
+          "ability_id": 615,
+          "name": "DATA ERROR",
+          "rows": 6
+        },
+        {
+          "ability_id": 2458,
+          "name": "Whirling Talons",
+          "rows": 3
+        },
+        {
+          "ability_id": 1966,
+          "name": "Great Sting",
+          "rows": 3
+        }
+      ],
+      "freq_count": 77,
+      "freq_pct": 2.758868,
+      "nodes": [
+        "Node-AURA",
+        "Node-GATE",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Applies aura with max stack/instance limit; chain_failure controls flow on failure."
+      ],
+      "param_label": "ChainFailure,Accuracy,Duration,MaxAllowed,,",
+      "prop_id": 54,
+      "test_ids": [
+        "UT-OP54-001",
+        "UT-OP54-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "HEAL"
+      ],
+      "args_schema": {
+        "accuracy": "int",
+        "points": "int",
+        "required_caster_state": "int",
+        "required_target_state": "int",
+        "variance": "int"
+      },
+      "category": "heal",
+      "confidence": "medium",
+      "examples": [
+        {
+          "ability_id": 665,
+          "aura_ability_id": 0,
+          "effect_id": 1611,
+          "param_raw": "50,100,0,120,0,0"
+        }
+      ],
+      "freq_count": 1,
+      "freq_pct": 0.0358,
+      "meaning_en": "Heals the caster (self) for Points (standard heal pipeline), gated by RequiredCasterState/RequiredTargetState, with Accuracy hit check and optional variance dampening.",
+      "meaning_zh": "对施法者自身进行治疗（Points 走标准治疗管线），受 RequiredCasterState/RequiredTargetState 门控；使用 Accuracy 命中判定；Variance 以方差抑制方式调制默认波动。",
+      "notes": [
+        "Engine implementation heals self (actor), using the provided target only for required-state checks.",
+        "Variance model matches Prop104/Prop100: v = 1 - (Variance/100) * (1 - rand_variance).",
+        "Observed in export: Ability 665 (Consume Corpse) uses RequiredTargetState=120 and clears state 120 after healing."
+      ],
+      "opcode_name": "HEAL_SELF_REQSTATE_VARIANCE",
+      "param_label": "Points,Accuracy,RequiredCasterState,RequiredTargetState,Variance,",
+      "prop_id": 61,
+      "test_ids": [
+        "tests/test_op0061_0144_consume_corpse_targeting.py::test_op144_sets_corpse_target_override",
+        "tests/test_op0061_0144_consume_corpse_targeting.py::test_op61_heals_self_when_target_has_required_state"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "is_periodic": "int(0/1)",
+        "points": "int"
+      },
+      "category": "DMG_ISPERIODIC",
+      "examples": [
+        {
+          "ability_id": 615,
+          "name": "DATA ERROR",
+          "rows": 6
+        },
+        {
+          "ability_id": 2304,
+          "name": "Nightmares",
+          "rows": 3
+        },
+        {
+          "ability_id": 84,
+          "name": "PadAuraTest",
+          "rows": 1
+        }
+      ],
+      "freq_count": 23,
+      "freq_pct": 0.824077,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Periodic damage/heal tick carrier.",
+        "Aquatic passive reduces periodic (DoT) damage taken by a fixed factor (recommended default 0.75, configurable) applied on periodic DamageEvents."
+      ],
+      "param_label": "Points,Accuracy,IsPeriodic,,,",
+      "prop_id": 62,
+      "test_ids": [
+        "UT-OP62-001",
+        "UT-OP62-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "more_points": "int",
+        "points": "int"
+      },
+      "category": "DMG_BONUS_IF_STRUCK_FIRST",
+      "examples": [
+        {
+          "ability_id": 472,
+          "name": "Blast of Hatred",
+          "rows": 1
+        }
+      ],
+      "freq_count": 0,
+      "freq_pct": 0.0,
+      "nodes": [
+        "Node-DMG"
+      ],
+      "notes": [
+        "Deals standard points-based damage.",
+        "If the caster was struck (took damage) before acting this round, adds MorePoints to Points before resolving damage."
+      ],
+      "param_label": "Points,MorePoints,Accuracy,,,",
+      "prop_id": 67,
+      "test_ids": [
+        "UT-OP67-001",
+        "UT-OP67-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "HEAL"
+      ],
+      "args_schema": {
+        "max_points": "int",
+        "points": "int",
+        "state": "int",
+        "state_to_multiply_against": "int"
+      },
+      "category": "heal+aura",
+      "confidence": "medium",
+      "examples": [
+        {
+          "ability_id": 303,
+          "aura_ability_id": 302,
+          "effect_id": 519,
+          "param_raw": "12,70,10,70,0,0"
+        }
+      ],
+      "freq_count": 1,
+      "freq_pct": 0.0,
+      "meaning_en": "Applies the referenced AuraBattlePetAbilityID as a (typically permanent) aura, then heals the target for Points multiplied by the current value of StateToMultiplyAgainst (clamped by MaxPoints when provided).",
+      "meaning_zh": "施加 AuraBattlePetAbilityID 指定的光环（通常为永久/-1），随后按 Points × 当前 StateToMultiplyAgainst 的状态值进行治疗（若提供 MaxPoints 则对乘数做上限裁剪）。",
+      "notes": [
+        "DB2 ParamLabel has no Accuracy; engine treats it as always-hit.",
+        "Observed in export: Ability 303 (Plant) uses state 70 Special_Plant and aura 302 Planted."
+      ],
+      "opcode_name": "HEAL_SCALE_BY_STATE_APPLY_AURA",
+      "param_label": "Points,State,MaxPoints,StateToMultiplyAgainst,,",
+      "prop_id": 78,
+      "test_ids": [
+        "tests/test_op0078.py::test_op78_plant_like_heal_scaled_by_state_and_apply_aura"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "delta": "int",
+        "max": "int",
+        "min": "int",
+        "state": "int"
+      },
+      "category": "STATE_ADD_CLAMP",
+      "examples": [
+        {
+          "ability_id": 295,
+          "name": "GM Heal",
+          "rows": 2
+        },
+        {
+          "ability_id": 387,
+          "name": "Tympanic Tantrum",
+          "rows": 2
+        },
+        {
+          "ability_id": 563,
+          "name": "Quick Attack",
+          "rows": 2
+        }
+      ],
+      "freq_count": 28,
+      "freq_pct": 1.003225,
+      "nodes": [
+        "Node-STATE"
+      ],
+      "notes": [
+        "Adds delta to state and clamps to [min,max]. Often used for speed mods or counters."
+      ],
+      "param_label": "State,StateChange,StateMin,StateMax,,",
+      "prop_id": 79,
+      "test_ids": [
+        "UT-OP79-001",
+        "UT-OP79-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "chain_failure": "int(0/1)",
+        "duration": "int",
+        "points": "int"
+      },
+      "category": "WEATHER_SET",
+      "examples": [
+        {
+          "ability_id": 172,
+          "name": "Scorched Earth",
+          "rows": 1
+        },
+        {
+          "ability_id": 204,
+          "name": "Call Lightning",
+          "rows": 1
+        },
+        {
+          "ability_id": 2425,
+          "name": "Swamp Mud",
+          "rows": 1
+        }
+      ],
+      "freq_count": 24,
+      "freq_pct": 0.859907,
+      "nodes": [
+        "Node-WEATHER",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Sets battlefield weather for duration; affects S6 Weather Modifier.",
+        "Elemental passive filters negative weather effects but preserves positive benefits."
+      ],
+      "param_label": "Points,Accuracy,Duration,ChainFailure,,",
+      "prop_id": 80,
+      "test_ids": [
+        "UT-OP80-001",
+        "UT-OP80-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "state": "int"
+      },
+      "category": "STATE_HINT",
+      "examples": [
+        {
+          "ability_id": 319,
+          "name": "Magma Wave",
+          "rows": 2
+        },
+        {
+          "ability_id": 2482,
+          "name": "Sticky Surge",
+          "rows": 2
+        },
+        {
+          "ability_id": 419,
+          "name": "Tidal Wave",
+          "rows": 2
+        }
+      ],
+      "freq_count": 28,
+      "freq_pct": 1.003225,
+      "nodes": [
+        "Node-STATE"
+      ],
+      "notes": [
+        "Context/tag state hint for subsequent effects; should not directly alter damage numbers."
+      ],
+      "param_label": "State,,,,,",
+      "prop_id": 85,
+      "test_ids": [
+        "UT-OP85-001",
+        "UT-OP85-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "DMG",
+        "AURA"
+      ],
+      "args_schema": {
+        "accuracy": "float|int",
+        "aura_id": "int",
+        "duration": "int",
+        "duration2": "int",
+        "points": "int"
+      },
+      "category": "damage+aura",
+      "confidence": "medium",
+      "examples": [
+        {
+          "ability_id": 323,
+          "aura_ability_id": 322,
+          "effect_id": 546,
+          "param_raw": "25,100,2,324,2,0"
+        }
+      ],
+      "freq_count": 1,
+      "freq_pct": 0.0,
+      "meaning_en": "On hit, deals standard damage (Points, Accuracy). Applies primary aura (AuraID) to the target for Duration. If the target already has AuraID, consume/remove it and apply the secondary aura (AuraBattlePetAbilityID) for Duration2.",
+      "meaning_zh": "命中后造成标准伤害（Points,Accuracy）。若目标未带 AuraID，则对目标施加 AuraID 持续 Duration 回合；若目标已带 AuraID，则先移除该 AuraID（视为“被二次命中触发”），再施加 AuraBattlePetAbilityID 指定的二段光环，持续 Duration2 回合。",
+      "notes": [
+        "Observed in export: Ability 323 (Gravity) upgrades aura 324 -> aura 322 (Levitated) on second hit."
+      ],
+      "opcode_name": "DMG_APPLY_OR_UPGRADE_AURA_ON_HIT",
+      "param_label": "Points,Accuracy,Duration,AuraID,Duration2,",
+      "prop_id": 86,
+      "test_ids": [
+        "tests/test_op0086.py::test_op86_001_apply_primary_aura_on_first_hit",
+        "tests/test_op0086.py::test_op86_002_upgrade_to_secondary_aura_on_second_hit"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "points": "int"
+      },
+      "category": "DMG_SIMPLE",
+      "examples": [
+        {
+          "ability_id": 184,
+          "name": "Quills",
+          "rows": 1
+        },
+        {
+          "ability_id": 193,
+          "name": "Flank",
+          "rows": 1
+        },
+        {
+          "ability_id": 2433,
+          "name": "Arcane Barrage",
+          "rows": 1
+        }
+      ],
+      "freq_count": 22,
+      "freq_pct": 0.788248,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Simplified points+accuracy damage event."
+      ],
+      "param_label": "Points,Accuracy,,,,",
+      "prop_id": 103,
+      "test_ids": [
+        "UT-OP103-001",
+        "UT-OP103-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "percentage": "int|float"
+      },
+      "category": "PCT_HP_EFFECT",
+      "examples": [
+        {
+          "ability_id": 714,
+          "name": "GM Revive",
+          "rows": 6
+        },
+        {
+          "ability_id": 723,
+          "name": "Failsafe",
+          "rows": 1
+        },
+        {
+          "ability_id": 724,
+          "name": "Damned",
+          "rows": 1
+        }
+      ],
+      "freq_count": 13,
+      "freq_pct": 0.465783,
+      "nodes": [
+        "Node-DMG"
+      ],
+      "notes": [
+        "Percent-of-HP effect; SRS must specify reference (target maxhp vs currenthp) and caps; then treated as D_base at S1."
+      ],
+      "param_label": "Percentage,Unused,Unused,Unused,,",
+      "prop_id": 111,
+      "test_ids": [
+        "UT-OP111-001",
+        "UT-OP111-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {},
+      "category": "PRIORITY_MARKER",
+      "examples": [
+        {
+          "ability_id": 403,
+          "name": "Sunny Day",
+          "rows": 6
+        },
+        {
+          "ability_id": 1991,
+          "name": "Ancient Knowledge",
+          "rows": 3
+        },
+        {
+          "ability_id": 576,
+          "name": "Perk Up",
+          "rows": 3
+        }
+      ],
+      "freq_count": 57,
+      "freq_pct": 2.042279,
+      "nodes": [
+        "Node-BTL"
+      ],
+      "notes": [
+        "Marks priority / ordering semantics for action resolution. Used by initiative resolver with Speed tie-break."
+      ],
+      "param_label": ",,,,,",
+      "prop_id": 116,
+      "test_ids": [
+        "UT-OP116-001",
+        "UT-OP116-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "bypass_pet_passives": "int(0/1)",
+        "caster_immune_state": "int",
+        "enable_reverse": "int(0/1)",
+        "target_immune_state": "int"
+      },
+      "category": "IMMUNITY_FILTER_BYPASS_PASSIVES",
+      "examples": [
+        {
+          "ability_id": 967,
+          "name": "GM Kill All Enemy",
+          "rows": 3
+        },
+        {
+          "ability_id": 242,
+          "name": "Undead",
+          "rows": 1
+        },
+        {
+          "ability_id": 1739,
+          "name": "Crumbling",
+          "rows": 1
+        }
+      ],
+      "freq_count": 24,
+      "freq_pct": 0.859907,
+      "nodes": [
+        "Node-ACC",
+        "Node-PASSIVE"
+      ],
+      "notes": [
+        "Immunity filter with optional bypass of pet passives.",
+        "SRS must define whether bypass applies to MagicCap/UndeadClip/etc; tests must enforce."
+      ],
+      "param_label": "Accuracy,CasterImmuneState,TargetImmuneState,enableReverse,BypassPetPassives,",
+      "prop_id": 135,
+      "test_ids": [
+        "UT-OP135-001",
+        "UT-OP135-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0"
+      ],
+      "args_schema": {
+        "dont_miss": "int(0/1)"
+      },
+      "category": "DONT_MISS",
+      "examples": [
+        {
+          "ability_id": 941,
+          "name": "High Fiber",
+          "rows": 4
+        },
+        {
+          "ability_id": 667,
+          "name": "Aged Yolk",
+          "rows": 2
+        },
+        {
+          "ability_id": 763,
+          "name": "Sear Magic",
+          "rows": 2
+        }
+      ],
+      "freq_count": 19,
+      "freq_pct": 0.68076,
+      "nodes": [
+        "Node-ACC"
+      ],
+      "notes": [
+        "Forces hit check success at S0; SRS must define whether immunity still blocks."
+      ],
+      "param_label": "DontMiss,,,,,",
+      "prop_id": 136,
+      "test_ids": [
+        "UT-OP136-001",
+        "UT-OP136-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0"
+      ],
+      "args_schema": {
+        "accuracy": "int|float"
+      },
+      "category": "ACCURACY_CTX_SET_B",
+      "examples": [
+        {
+          "ability_id": 780,
+          "name": "Death Grip",
+          "rows": 1
+        },
+        {
+          "ability_id": 1356,
+          "name": "Inferno Herding",
+          "rows": 1
+        },
+        {
+          "ability_id": 1687,
+          "name": "Inferno Herding",
+          "rows": 1
+        }
+      ],
+      "freq_count": 15,
+      "freq_pct": 0.537442,
+      "nodes": [
+        "Node-ACC"
+      ],
+      "notes": [
+        "Same family as 145; treat as another context setter (stack) unless evidence indicates different scope."
+      ],
+      "param_label": "Accuracy,,,,,",
+      "prop_id": 139,
+      "test_ids": [
+        "UT-OP139-001",
+        "UT-OP139-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "bonus_points": "int",
+        "bonus_state": "int",
+        "points": "int"
+      },
+      "category": "DMG_BONUS_IF_STATE",
+      "examples": [
+        {
+          "ability_id": 668,
+          "name": "Dreadful Breath",
+          "rows": 3
+        },
+        {
+          "ability_id": 2250,
+          "name": "Akunda's Wrath",
+          "rows": 3
+        },
+        {
+          "ability_id": 589,
+          "name": "Arcane Storm",
+          "rows": 1
+        }
+      ],
+      "freq_count": 22,
+      "freq_pct": 0.788248,
+      "nodes": [
+        "Node-STATE",
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Adds bonus_points when bonus_state condition holds; must be specified whether it modifies points or is an additive component at S1."
+      ],
+      "param_label": "Points,Accuracy,BonusState,BonusPoints,,",
+      "prop_id": 141,
+      "test_ids": [
+        "UT-OP141-001",
+        "UT-OP141-002"
+      ]
+    },
+    {
+      "affects_steps": [],
+      "args_schema": {},
+      "category": "targeting",
+      "confidence": "medium",
+      "examples": [
+        {
+          "ability_id": 665,
+          "aura_ability_id": 0,
+          "effect_id": 1131,
+          "param_raw": "0,0,0,0,0,0"
+        }
+      ],
+      "freq_count": 1,
+      "freq_pct": 0.0358,
+      "meaning_en": "Selects a dead pet (corpse) on the opposing team as the target for subsequent effects in the same cast turn (via ctx.acc_ctx.target_override_id).",
+      "meaning_zh": "选择对方队伍中的一个死亡宠物（尸体）作为后续 effect 的目标（通过 ctx.acc_ctx.target_override_id）。",
+      "notes": [
+        "Prefer a dead pet with state 120>0 when state tracking exists; otherwise use the first dead pet found.",
+        "This opcode is a targeting utility and does not directly change HP/states on its own.",
+        "Observed in export: Ability 665 (Consume Corpse) uses Prop144 before a required-target-state heal (Prop61)."
+      ],
+      "opcode_name": "TARGET_OVERRIDE_CORPSE",
+      "param_label": ",,,,,",
+      "prop_id": 144,
+      "test_ids": [
+        "tests/test_op0061_0144_consume_corpse_targeting.py::test_op144_sets_corpse_target_override"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0"
+      ],
+      "args_schema": {
+        "accuracy": "int|float"
+      },
+      "category": "ACCURACY_CTX_SET_A",
+      "examples": [
+        {
+          "ability_id": 457,
+          "name": "Sweep",
+          "rows": 1
+        },
+        {
+          "ability_id": 568,
+          "name": "Feign Death",
+          "rows": 1
+        },
+        {
+          "ability_id": 2455,
+          "name": "Deliberate Retreat",
+          "rows": 1
+        }
+      ],
+      "freq_count": 18,
+      "freq_pct": 0.64493,
+      "nodes": [
+        "Node-ACC"
+      ],
+      "notes": [
+        "Sets accuracy context; recommended implementation: AccuracyContext stack by effect order."
+      ],
+      "param_label": "Accuracy,,,,,",
+      "prop_id": 145,
+      "test_ids": [
+        "UT-OP145-001",
+        "UT-OP145-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "is_periodic": "int(0/1)",
+        "points": "int"
+      },
+      "category": "DMG_POINTS_NONLETHAL",
+      "examples": [
+        {
+          "ability_id": 826,
+          "name": "Weakening Blow",
+          "rows": 1
+        },
+        {
+          "ability_id": 1357,
+          "name": "Superbark",
+          "rows": 1
+        }
+      ],
+      "freq_count": 2,
+      "freq_pct": 0.071659,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Standard points-based damage, but cannot reduce target HP below 1 (non-lethal).",
+        "If target HP is already 1 (or 0), final damage is clamped to 0."
+      ],
+      "param_label": "Points,Accuracy,IsPeriodic,,,",
+      "prop_id": 149,
+      "test_ids": [
+        "UT-OP149-001"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "state": "int",
+        "state_points": "int"
+      },
+      "category": "DEATH_FLOW_STATE",
+      "examples": [
+        {
+          "ability_id": 383,
+          "name": "Leech Life",
+          "rows": 1
+        },
+        {
+          "ability_id": 529,
+          "name": "Belly Slide",
+          "rows": 1
+        },
+        {
+          "ability_id": 653,
+          "name": "Haunt",
+          "rows": 1
+        }
+      ],
+      "freq_count": 14,
+      "freq_pct": 0.501612,
+      "nodes": [
+        "Node-STATE",
+        "Node-DEATH"
+      ],
+      "notes": [
+        "State hook often involved in death flow / resurrection / special transitions.",
+        "Must integrate with Undead and Mechanical passives (single-use locks)."
+      ],
+      "param_label": "State,StatePoints,unused,unused,,",
+      "prop_id": 157,
+      "test_ids": [
+        "UT-OP157-001",
+        "UT-OP157-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "chance": "int|float"
+      },
+      "category": "GATE_CHANCE",
+      "examples": [
+        {
+          "ability_id": 489,
+          "name": "Mana Surge",
+          "rows": 3
+        },
+        {
+          "ability_id": 77,
+          "name": "Strong Trap",
+          "rows": 1
+        },
+        {
+          "ability_id": 1398,
+          "name": "Feathered Frenzy",
+          "rows": 1
+        }
+      ],
+      "freq_count": 69,
+      "freq_pct": 2.472232,
+      "nodes": [
+        "Node-GATE"
+      ],
+      "notes": [
+        "Chance gate used for conditional follow-up effects."
+      ],
+      "param_label": "Chance,,,,,",
+      "prop_id": 158,
+      "test_ids": [
+        "UT-OP158-001",
+        "UT-OP158-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "state": "int",
+        "state_points": "int"
+      },
+      "category": "CC_RESILIENT_HINT",
+      "examples": [
+        {
+          "ability_id": 175,
+          "name": "Volcano",
+          "rows": 2
+        },
+        {
+          "ability_id": 769,
+          "name": "Surge of Light",
+          "rows": 1
+        },
+        {
+          "ability_id": 2512,
+          "name": "Ice Age",
+          "rows": 1
+        }
+      ],
+      "freq_count": 28,
+      "freq_pct": 1.003225,
+      "nodes": [
+        "Node-STATE",
+        "Node-AURA"
+      ],
+      "notes": [
+        "Control/Resilient hint used with CC application; participates in duration reduction or immunity reporting."
+      ],
+      "param_label": "State,StatePoints,unused,unused,,",
+      "prop_id": 177,
+      "test_ids": [
+        "UT-OP177-001",
+        "UT-OP177-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "(none)"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "duration": "int",
+        "report_fails_as_immune": "int(0/1)",
+        "state_points": "int",
+        "target_state": "int"
+      },
+      "category": "APPLY_CC_WITH_IMMUNE_REPORT",
+      "examples": [
+        {
+          "ability_id": 227,
+          "name": "Blackout Kick",
+          "rows": 1
+        },
+        {
+          "ability_id": 348,
+          "name": "Bash",
+          "rows": 1
+        },
+        {
+          "ability_id": 2468,
+          "name": "[DNT] TRAP HELP",
+          "rows": 1
+        }
+      ],
+      "freq_count": 24,
+      "freq_pct": 0.859907,
+      "nodes": [
+        "Node-AURA",
+        "Node-ACC",
+        "Node-GATE"
+      ],
+      "notes": [
+        "Applies CC aura with explicit immune reporting behaviour based on target_state and report flag."
+      ],
+      "param_label": "StatePoints,Accuracy,Duration,TargetState,ChainFailure,ReportFailsAsImmune",
+      "prop_id": 178,
+      "test_ids": [
+        "UT-OP178-001",
+        "UT-OP178-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "override_index": "int|null",
+        "points": "int",
+        "variance": "int|float"
+      },
+      "category": "DMG_POINTS_VARIANCE_OVERRIDE",
+      "examples": [
+        {
+          "ability_id": 2523,
+          "name": "Shadow Bolt Volley",
+          "rows": 3
+        },
+        {
+          "ability_id": 189,
+          "name": "Cyclone",
+          "rows": 3
+        },
+        {
+          "ability_id": 2103,
+          "name": "Void Cyclone",
+          "rows": 3
+        }
+      ],
+      "freq_count": 90,
+      "freq_pct": 3.224651,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC"
+      ],
+      "notes": [
+        "Like 23, plus override_index to route to variant point tables or subcomponents."
+      ],
+      "param_label": "Points,Accuracy,Variance,OverrideIndex,,",
+      "prop_id": 222,
+      "test_ids": [
+        "UT-OP222-001",
+        "UT-OP222-002"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "points": "int"
+      },
+      "category": "DMG_IF_FIRST",
+      "examples": [
+        {
+          "ability_id": 122,
+          "name": "Tail Sweep",
+          "rows": 1
+        }
+      ],
+      "freq_count": 1,
+      "freq_pct": 0.035829,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC",
+        "Node-ORDER"
+      ],
+      "notes": [
+        "Deals standard points-based damage only if the user attacks first in the current round.",
+        "If the order condition is not met, the effect is skipped (no hit roll, no damage)."
+      ],
+      "param_label": "Points,Accuracy,,,,",
+      "prop_id": 233,
+      "test_ids": [
+        "UT-OP233-001"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10"
+      ],
+      "args_schema": {
+        "accuracy": "int|float",
+        "points": "int"
+      },
+      "category": "DMG_IF_LAST",
+      "examples": [
+        {
+          "ability_id": 122,
+          "name": "Tail Sweep",
+          "rows": 1
+        },
+        {
+          "ability_id": 2402,
+          "name": "Steady Snap",
+          "rows": 1
+        }
+      ],
+      "freq_count": 2,
+      "freq_pct": 0.071659,
+      "nodes": [
+        "Node-DMG",
+        "Node-ACC",
+        "Node-ORDER"
+      ],
+      "notes": [
+        "Deals standard points-based damage only if the user attacks last in the current round.",
+        "If the order condition is not met, the effect is skipped (no hit roll, no damage)."
+      ],
+      "param_label": "Points,Accuracy,,,,",
+      "prop_id": 234,
+      "test_ids": [
+        "UT-OP234-001"
+      ]
+    },
+    {
+      "affects_steps": [
+        "S0_points",
+        "S1_accuracy",
+        "S2_variance",
+        "S6_type_weather",
+        "S8_crit",
+        "S9_flat_state",
+        "S10_periodic"
+      ],
+      "args_schema": {
+        "accuracy": "int",
+        "power": "int"
+      },
+      "category": "DMG_LAST_HIT_TAKEN",
+      "examples": [
+        {
+          "ability_id": 997,
+          "name": "Vengeance",
+          "rows": 1
+        },
+        {
+          "ability_id": 2432,
+          "name": "Dark Fate",
+          "rows": 1
+        }
+      ],
+      "freq_count": 2,
+      "freq_pct": 0.07165890361877462,
+      "nodes": [
+        "Node-DMG"
+      ],
+      "notes": [
+        "Deals damage equal to the last hit taken by the user (actor), scaled by Power% (e.g., 100% or 150%).",
+        "Typical abilities: Vengeance (997), Dark Fate (2432)."
+      ],
+      "param_label": "Power,Accuracy,,,,",
+      "prop_id": 197,
+      "test_ids": [
+        "UT-OP197-001"
+      ]
+    }
+  ],
+  "source": {
+    "top30_coverage_pct": 89.5378,
+    "total_effect_rows": 2791,
+    "xlsx": "wow_export_merged.xlsx"
+  },
+  "version": 1
+}

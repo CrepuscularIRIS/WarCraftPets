@@ -1,0 +1,24 @@
+// ============================================================
+// pack_builder_config (JSONC)
+// 生成器开关（建议输出 release + debug 两份）
+// ============================================================
+{
+  "output": {
+    "release": {
+      "emit_params": false,
+      "omit_empty_triggers": true,
+      "pretty_print": true
+    },
+    "debug": {
+      "emit_params": true,
+      "omit_empty_triggers": true,
+      "pretty_print": true,
+      "emit_build_warnings": true
+    }
+  },
+
+  "semantics": {
+    // 将 opcode_semantics_overrides.template.jsonc 复制为你自己的 overrides 文件并持续维护
+    "overrides_file": "opcode_semantics_overrides.jsonc"
+  }
+}
