@@ -1,4 +1,6 @@
-# WoW Pet Battle Engine Skeleton (Prop24 example)
+# WarCraftPets - WoW Pet Battle Engine
+
+A simulation engine for World of Warcraft pet battles, implementing battle mechanics, pet stats, abilities, and effects.
 
 ## Run
 ```bash
