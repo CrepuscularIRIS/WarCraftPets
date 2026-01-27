@@ -172,3 +172,65 @@ git push origin feature/new-feature
 - Battle logic is based on WoW pet battle mechanics
 - Effect system uses opcode-based handler pattern for extensibility
 - Event-driven architecture enables modular and testable code
+
+---
+
+## Gastown Integration (gt-agent)
+
+### Quick Start with gt-agent
+
+This project uses **gt-agent** SubAgent to orchestrate ClaudeCode and Codex via Gastown commands.
+
+```bash
+# 启动gt-agent进行协调工作
+Task tool with subagent_type: "gt-agent"
+```
+
+### gt-agent Capabilities
+
+**Task Assignment:**
+```bash
+# ClaudeCode 实现任务
+gt sling "implement damage multiplier" WarCraftPets --agent claude
+
+# Codex 审查任务
+gt sling "review damage_pipeline.py" WarCraftPets --agent codex-review
+
+# Codex 验证测试
+gt sling "run full test suite" WarCraftPets --agent codex-review
+```
+
+**Common Workflows:**
+```bash
+# 完整开发流程: 实现 -> 审查 -> 推送
+gt sling "implement feature X" WarCraftPets --agent claude
+gt sling "review and verify" WarCraftPets --agent codex-review
+gt sling "push to github" WarCraftPets --agent claude
+
+# Bug修复流程
+gt sling "fix bug in effect dispatcher" WarCraftPets --agent claude
+gt sling "verify fix and run tests" WarCraftPets --agent codex-review
+```
+
+### gt-agent Configuration
+
+- **Location**: `/home/yarizakurahime/gt/.claude/subagents/gt-agent.json`
+- **Documentation**: `/home/yarizakurahime/gt/.claude/agents/gt-agent.md`
+
+### Manual gt Commands
+
+If gt-agent is unavailable, use these commands directly:
+
+```bash
+# Check rigs
+gt rig list
+
+# Run tests with ClaudeCode
+gt sling "run pytest -q" WarCraftPets --agent claude
+
+# Review with Codex
+gt sling "comprehensive code review" WarCraftPets --agent codex-review
+
+# Generate validation logs
+gt sling "generate validation report" WarCraftPets --agent codex-review
+```

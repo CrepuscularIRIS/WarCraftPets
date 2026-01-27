@@ -9,6 +9,8 @@ class AuraInstance:
     source_effect_id: int
     remaining_duration: int  # -1 => permanent
     tickdown_first_round: bool = False
+    # Used to avoid immediately ticking down newly-applied auras at TURN_END.
+    just_applied: bool = False
     stacks: int = 1
 
     # Backward-compatible single payload (older usage)

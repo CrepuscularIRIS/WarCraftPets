@@ -22,7 +22,7 @@ class AuraManager:
     # - Stores at most one instance per (owner_pet_id, aura_id).
     # - Prop26/52 use apply(): overwrite duration, stacks stays 1.
     # - Prop54 uses apply_with_stack_limit(): stacks increased up to max, duration overwritten.
-    # - tick(owner): decrements remaining_duration each TURN_START and expires at 0 (ignores -1).
+    # - tick(owner): decrements remaining_duration each TURN_END and expires at 0 (ignores -1).
 
     def __init__(self):
         self._auras: Dict[int, Dict[int, AuraInstance]] = {}
@@ -48,12 +48,26 @@ class AuraManager:
 
         to_remove = []
         for aura_id, inst in om.items():
+            # Permanent aura (-1): just clear just_applied flag, never expire
             if inst.remaining_duration == -1:
+                inst.just_applied = False
                 continue
+
+            # First turn after apply: handle tickdown_first_round logic
+            if inst.just_applied:
+                inst.just_applied = False
+                if inst.tickdown_first_round and inst.remaining_duration > 0:
+                    inst.remaining_duration -= 1
+                    if inst.remaining_duration <= 0:
+                        to_remove.append(aura_id)
+                continue
+
+            # Normal tick: decrement remaining duration
             if inst.remaining_duration > 0:
                 inst.remaining_duration -= 1
                 if inst.remaining_duration <= 0:
                     to_remove.append(aura_id)
+
         for aura_id in to_remove:
             om.pop(aura_id, None)
             expired.append(AuraExpire(owner_pet_id=int(owner_pet_id), aura_id=int(aura_id)))
@@ -76,9 +90,6 @@ class AuraManager:
         if duration != -1 and duration < 0:
             duration = 0
 
-        if tickdown_first_round and duration > 0 and duration != -1:
-            duration -= 1
-
         if duration == 0:
             return AuraApplyResult(applied=False, refreshed=False, aura=None, reason="EXPIRED_IMMEDIATELY")
 
@@ -92,6 +103,7 @@ class AuraManager:
             source_effect_id=int(source_effect_id),
             remaining_duration=int(duration),
             tickdown_first_round=bool(tickdown_first_round),
+            just_applied=True,
             stacks=1,
         )
         owner_map[int(aura_id)] = aura
@@ -128,6 +140,7 @@ class AuraManager:
                 source_effect_id=int(source_effect_id),
                 remaining_duration=int(duration),
                 tickdown_first_round=False,
+                just_applied=True,
                 stacks=1,
             )
             owner_map[int(aura_id)] = aura
@@ -137,6 +150,7 @@ class AuraManager:
         existing.remaining_duration = int(duration)
         existing.caster_pet_id = int(caster_pet_id)
         existing.source_effect_id = int(source_effect_id)
+        existing.just_applied = True
         if existing.stacks < max_stacks:
             existing.stacks += 1
         return AuraApplyResult(applied=False, refreshed=True, aura=existing, reason="OK")

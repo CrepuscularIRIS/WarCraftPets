@@ -6,6 +6,7 @@ from engine.effects.registry import get_handler
 from engine.effects.param_parser import ParamParser
 from engine.effects.semantic_registry import get_default_registry, normalize_args, validate_and_fill_args
 from engine.effects.types import EffectResult
+from engine.core.event_bus import EventBus
 
 
 class EffectDispatcher:
@@ -13,6 +14,11 @@ class EffectDispatcher:
         self._sem = semantic_registry or get_default_registry()
 
     def dispatch(self, ctx, actor, target, effect_row) -> EffectResult:
+        if not hasattr(ctx, "event_bus"):
+            try:
+                ctx.event_bus = EventBus()
+            except Exception:
+                pass
         sem = self._sem.get(effect_row.prop_id)
         h = get_handler(effect_row.prop_id)
         if h is None:
@@ -34,4 +40,9 @@ class EffectDispatcher:
                 ctx.log.warn(effect_row, code="ARG_SCHEMA", detail=rep)
             args = normalize_args(args, sem.schema())
 
-        return h.apply(ctx, actor, target, effect_row, args)
+        try:
+            return h.apply(ctx, actor, target, effect_row, args)
+        except Exception as exc:
+            if hasattr(ctx, "log") and hasattr(ctx.log, "warn"):
+                ctx.log.warn(effect_row, code="HANDLER_ERROR", detail={"error": repr(exc)})
+            return EffectResult(executed=False, flow_control="CONTINUE")

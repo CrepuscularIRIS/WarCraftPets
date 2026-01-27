@@ -1,0 +1,79 @@
+{
+  "test_run_timestamp": "2026-01-27",
+  "total_tests": 4,
+  "passed": 3,
+  "failed": 1,
+  "results": [
+    {
+      "skill_name": "标准持续伤害",
+      "passed": true,
+      "expected": "持续2回合, 触发2次",
+      "actual": "活跃2回合, expire事件1次",
+      "discrepancies": [],
+      "event_count": 2,
+      "events": [
+        {
+          "type": "ON_AURA_APPLY",
+          "turn": 0,
+          "pet_id": 2,
+          "aura_id": 1001
+        },
+        {
+          "type": "ON_AURA_EXPIRE",
+          "turn": 2,
+          "pet_id": 2,
+          "aura_id": 1001
+        }
+      ]
+    },
+    {
+      "skill_name": "强化光环",
+      "passed": true,
+      "expected": "持续5回合, 触发5次",
+      "actual": "活跃5回合, expire事件1次",
+      "discrepancies": [],
+      "event_count": 2,
+      "events": [
+        {
+          "type": "ON_AURA_APPLY",
+          "turn": 0,
+          "pet_id": 2,
+          "aura_id": 1002
+        },
+        {
+          "type": "ON_AURA_EXPIRE",
+          "turn": 5,
+          "pet_id": 2,
+          "aura_id": 1002
+        }
+      ]
+    },
+    {
+      "skill_name": "充能攻击",
+      "passed": false,
+      "expected": "3回合充能后造成大量伤害",
+      "actual": "记录0个事件",
+      "discrepancies": [
+        "充能技能问题: 3回合充能后没有触发ON_CHARGE_READY事件"
+      ],
+      "event_count": 0,
+      "events": []
+    },
+    {
+      "skill_name": "永久增益",
+      "passed": true,
+      "expected": "持续-1回合, 触发9次",
+      "actual": "活跃9回合, expire事件0次",
+      "discrepancies": [],
+      "event_count": 1,
+      "events": [
+        {
+          "type": "ON_AURA_APPLY",
+          "turn": 0,
+          "pet_id": 2,
+          "aura_id": 3001
+        }
+      ]
+    }
+  ]
+}

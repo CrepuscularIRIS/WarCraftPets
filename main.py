@@ -36,6 +36,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # Engine imports
 from engine.core.team_manager import TeamManager
+from engine.core.event_bus import EventBus
 from engine.resolver.aura_manager import AuraManager
 from engine.resolver.cooldown import CooldownManager
 from engine.resolver.state_manager import StateManager
@@ -385,6 +386,7 @@ class BattleContext:
         self.aura = AuraManager()
         self.cooldowns = CooldownManager()
         self.weather = WeatherManager()
+        self.event_bus = EventBus()
 
         # 解析器
         self.stats = StatsResolver()
