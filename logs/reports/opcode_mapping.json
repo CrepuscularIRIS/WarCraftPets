@@ -1,0 +1,314 @@
+{
+  "86": {
+    "type": "damage",
+    "handler": "op0086_dmg_points_apply_or_upgrade_aura"
+  },
+  "135": {
+    "type": "unknown",
+    "handler": "op0135_execute_or_bypass"
+  },
+  "145": {
+    "type": "unknown",
+    "handler": "op0145_accuracy_ctx_set_a"
+  },
+  "121": {
+    "type": "heal",
+    "handler": "op0121_clone_set_health_pct"
+  },
+  "111": {
+    "type": "state",
+    "handler": "op0111_set_hp_pct"
+  },
+  "24": {
+    "type": "damage",
+    "handler": "op0024_dmg_points_std"
+  },
+  "158": {
+    "type": "unknown",
+    "handler": "op0158_gate_chance"
+  },
+  "246": {
+    "type": "unknown",
+    "handler": "op0246_cooldown_modifier_by_slot"
+  },
+  "168": {
+    "type": "aura",
+    "handler": "op0168_aura_apply_duration_nolabel"
+  },
+  "100": {
+    "type": "heal",
+    "handler": "op0100_heal_points_variance_override"
+  },
+  "61": {
+    "type": "heal",
+    "handler": "op0061_heal_self_reqstate_variance"
+  },
+  "29": {
+    "type": "damage",
+    "handler": "op0029_dmg_required_state"
+  },
+  "31": {
+    "type": "state",
+    "handler": "op0031_set_state"
+  },
+  "177": {
+    "type": "unknown",
+    "handler": "op0177_cc_resilient_hint"
+  },
+  "178": {
+    "type": "unknown",
+    "handler": "op0178_cc_apply_with_resilient"
+  },
+  "159": {
+    "type": "unknown",
+    "handler": "op0159_multi_target_advance"
+  },
+  "63": {
+    "type": "aura",
+    "handler": "op0063_aura_apply_duration"
+  },
+  "26": {
+    "type": "aura",
+    "handler": "op0026_aura_apply_duration"
+  },
+  "363": {
+    "type": "periodic",
+    "handler": "op0363_dmg_points_acc_isperiodic"
+  },
+  "150": {
+    "type": "unknown",
+    "handler": "op0150_wall_or_object_apply"
+  },
+  "128": {
+    "type": "state",
+    "handler": "op0128_set_target_hp_pct"
+  },
+  "103": {
+    "type": "damage",
+    "handler": "op0103_dmg_simple"
+  },
+  "23": {
+    "type": "heal",
+    "handler": "op0023_heal_points_var"
+  },
+  "80": {
+    "type": "weather",
+    "handler": "op0080_weather_set"
+  },
+  "75": {
+    "type": "damage",
+    "handler": "op0075_dmg_points_apply_aura_self"
+  },
+  "0": {
+    "type": "damage",
+    "handler": "op0000_dmg_points_legacy"
+  },
+  "49": {
+    "type": "unknown",
+    "handler": "op0049_gate_chance_or_phase"
+  },
+  "129": {
+    "type": "unknown",
+    "handler": "op0129_lock_next_ability"
+  },
+  "50": {
+    "type": "aura",
+    "handler": "op0050_aura_apply_cond_stack_limit"
+  },
+  "222": {
+    "type": "damage",
+    "handler": "op0222_dmg_points_variance_override"
+  },
+  "52": {
+    "type": "aura",
+    "handler": "op0052_aura_apply_simple"
+  },
+  "67": {
+    "type": "damage",
+    "handler": "op0067_dmg_bonus_if_struck_first"
+  },
+  "141": {
+    "type": "damage",
+    "handler": "op0141_dmg_bonus_if_state"
+  },
+  "44": {
+    "type": "unknown",
+    "handler": "op0044_dispel_dot"
+  },
+  "117": {
+    "type": "unknown",
+    "handler": "op0117_ability_slot_lockout"
+  },
+  "172": {
+    "type": "aura",
+    "handler": "op0172_aura_apply_if_states"
+  },
+  "160": {
+    "type": "damage",
+    "handler": "op0160_dmg_bonus_if_first"
+  },
+  "59": {
+    "type": "desperation",
+    "handler": "op0059_dmg_desperation"
+  },
+  "22": {
+    "type": "unknown",
+    "handler": "op0022_timer_trig"
+  },
+  "149": {
+    "type": "damage",
+    "handler": "op0149_dmg_points_nonlethal"
+  },
+  "248": {
+    "type": "aura",
+    "handler": "op0248_aura_apply_self_if_required_caster_state"
+  },
+  "25": {
+    "type": "unknown",
+    "handler": "op0025_trap_attempt"
+  },
+  "230": {
+    "type": "aura",
+    "handler": "op0230_aura_apply_duration_states"
+  },
+  "194": {
+    "type": "unknown",
+    "handler": "op0194_target_self_if_prev_miss"
+  },
+  "112": {
+    "type": "resurrect",
+    "handler": "op0112_resurrect_team_dead_pct"
+  },
+  "226": {
+    "type": "damage",
+    "handler": "op0226_dmg_bonus_points_if_target_state"
+  },
+  "157": {
+    "type": "state",
+    "handler": "op0157_state_set_self_death"
+  },
+  "156": {
+    "type": "state",
+    "handler": "op0156_state_guard_or_cc_hint"
+  },
+  "138": {
+    "type": "state",
+    "handler": "op0138_state_change_if_target_state"
+  },
+  "76": {
+    "type": "unknown",
+    "handler": "op0076_charge_or_release"
+  },
+  "85": {
+    "type": "state",
+    "handler": "op0085_state_hint"
+  },
+  "77": {
+    "type": "aura",
+    "handler": "op0077_aura_apply_duration_with_points"
+  },
+  "68": {
+    "type": "periodic",
+    "handler": "op0068_dmg_points_acc_isperiodic"
+  },
+  "66": {
+    "type": "execute",
+    "handler": "op0066_dmg_execute_25pct"
+  },
+  "136": {
+    "type": "unknown",
+    "handler": "op0136_dont_miss"
+  },
+  "32": {
+    "type": "unknown",
+    "handler": "op0032_post_damage_lifesteal"
+  },
+  "131": {
+    "type": "aura",
+    "handler": "op0131_aura_apply_simple"
+  },
+  "28": {
+    "type": "aura",
+    "handler": "op0028_aura_apply_duration_special"
+  },
+  "139": {
+    "type": "unknown",
+    "handler": "op0139_accuracy_ctx_set_b"
+  },
+  "27": {
+    "type": "damage",
+    "handler": "op0027_dmg_ramping"
+  },
+  "116": {
+    "type": "unknown",
+    "handler": "op0116_priority_marker"
+  },
+  "144": {
+    "type": "unknown",
+    "handler": "op0144_target_dead_pet_override"
+  },
+  "104": {
+    "type": "damage",
+    "handler": "op0104_dmg_reqstate_variance"
+  },
+  "234": {
+    "type": "damage",
+    "handler": "op0234_dmg_if_last"
+  },
+  "229": {
+    "type": "unknown",
+    "handler": "op0229_mark_apply_duration"
+  },
+  "96": {
+    "type": "damage",
+    "handler": "op0096_dmg_state_gate"
+  },
+  "122": {
+    "type": "summon",
+    "handler": "op0122_clone_activate_or_spawn"
+  },
+  "107": {
+    "type": "unknown",
+    "handler": "op0107_force_swap_random"
+  },
+  "78": {
+    "type": "heal",
+    "handler": "op0078_heal_scale_by_state_apply_aura"
+  },
+  "170": {
+    "type": "damage",
+    "handler": "op0170_dmg_if_weather"
+  },
+  "137": {
+    "type": "aura",
+    "handler": "op0137_aura_apply_duration_req_state_value"
+  },
+  "62": {
+    "type": "periodic",
+    "handler": "op0062_dmg_isperiodic"
+  },
+  "370": {
+    "type": "damage",
+    "handler": "op0370_dmg_points_attacktype_override"
+  },
+  "197": {
+    "type": "damage",
+    "handler": "op0197_dmg_last_hit_taken"
+  },
+  "53": {
+    "type": "heal",
+    "handler": "op0053_heal_pct_maxhp"
+  },
+  "79": {
+    "type": "state",
+    "handler": "op0079_state_add_clamp"
+  },
+  "233": {
+    "type": "damage",
+    "handler": "op0233_dmg_if_first"
+  },
+  "54": {
+    "type": "aura",
+    "handler": "op0054_aura_apply_stack_limit"
+  }
+}
