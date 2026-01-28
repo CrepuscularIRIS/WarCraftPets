@@ -276,33 +276,50 @@ class BattleSimulator:
                 damage = int(damage * 1.3)  # 30%吸血加成
             hp2 -= damage
             self.log(f"{skill_name} 对宠物2 造成 {damage} 伤害")
+            # Issue 1: Log HP after skill effect
+            self.log(f"技能后: 宠物1 HP: {hp1}, 宠物2 HP: {hp2}")
+            # Issue 2: Apply lifesteal to caster
+            if skill_type == "lifesteal":
+                lifesteal_amount = int(damage * 0.3)
+                hp1 = min(hp1 + lifesteal_amount, 1500)
+                self.log(f"吸血效果恢复宠物1 {lifesteal_amount} 点生命")
 
         elif skill_type in ["heal"]:
             healing = value
+            actual_heal = min(healing, 1500 - hp1)  # Issue 7: Track actual heal amount
             hp1 = min(hp1 + healing, 1500)
-            self.log(f"{skill_name} 治疗宠物1 {healing} 点")
+            healing = actual_heal  # Return actual heal amount
+            self.log(f"{skill_name} 治疗宠物1 {healing} 点 (最大生命: 1500)")
 
         elif skill_type in ["buff", "debuff", "shield", "weather"]:
             duration = value
             aura_id = self.aura_state.apply(1, 2, duration, value)
             effects = 1
-            self.log(f"{skill_name} 应用 {skill_type} 效果 (持续{duration}回合, aura_id={aura_id})")
+            # Issue 8: Add '刷新' or '应用' marker
+            self.log(f"[应用] {skill_name} {skill_type} 效果 (持续{duration}回合, aura_id={aura_id})")
 
         elif skill_type == "periodic":
             aura_id = self.aura_state.apply(1, 2, 3, value)
             effects = 1
-            self.log(f"{skill_name} 应用周期性伤害 (每回合{value}, aura_id={aura_id})")
+            self.log(f"[应用] {skill_name} 周期性伤害 (每回合{value}, aura_id={aura_id})")
 
         elif skill_type in ["control", "state"]:
             aura_id = self.aura_state.apply(1, 2, 2, value)
             effects = 1
-            self.log(f"{skill_name} 应用 {skill_type} 效果 (持续2回合, aura_id={aura_id})")
+            self.log(f"[应用] {skill_name} {skill_type} 效果 (持续2回合, aura_id={aura_id})")
 
         elif skill_type == "summon":
-            self.log(f"{skill_name} 召唤 {value} 个单位")
+            # Issue 6: Track summoned units
+            self.summoned_units.append({"type": "clone", "count": value, "turn_summoned": self.turn})
+            self.log(f"{skill_name} 召唤 {value} 个单位 (总计: {len(self.summoned_units)}个召唤物)")
 
         elif skill_type == "resurrect":
-            self.log(f"{skill_name} 复活效果 (恢复{value}生命)")
+            # Issue 3: Add death state check and HP restoration
+            if hp1 <= 0:
+                hp1 = min(value, 1500)
+                self.log(f"{skill_name} 复活宠物1 恢复 {hp1} 点生命")
+            else:
+                self.log(f"{skill_name} 复活效果 (宠物1存活, 恢复{value}生命 - 未使用)")
 
         return damage, healing, effects
 
@@ -314,7 +331,8 @@ class BattleSimulator:
             value = aura["value"]
             if value > 0 and value < 100:  # 伤害aura
                 total_damage += value
-                target_hp -= value
+                # Issue 5: Removed target_hp modification - Python passes integers by value
+                # The caller is responsible for updating the actual HP value
         return total_damage
 
 
