@@ -1,6 +1,6 @@
 {
-  "round": 2,
-  "timestamp": "2026-01-28T20:20:56.608115",
+  "round": 3,
+  "timestamp": "2026-01-28T20:21:57.544361",
   "analysis": {
     "lines": 1162,
     "has_ability_effects": true,
@@ -14,7 +14,7 @@
   "special_skills_count": 783,
   "unimplemented_count": 783,
   "plan": {
-    "timestamp": "2026-01-28T20:20:56.608078",
+    "timestamp": "2026-01-28T20:21:57.544317",
     "total_unimplemented": 783,
     "by_type": {
       "buff": 377,
