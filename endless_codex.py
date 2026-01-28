@@ -137,6 +137,7 @@ def analyze_special_skills():
         }
 
         for t in special_types:
+            t_str = str(t)
             if t == 'aura':
                 rule['expected_effects'].append({
                     'type': 'aura',
