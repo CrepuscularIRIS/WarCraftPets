@@ -199,6 +199,97 @@ class BattleLogger:
         self.log(f"  ⚡ 速度: {pet0_name}={speed0} vs {pet1_name}={speed1} | 先手: {first}")
 
 
+class EventLogger:
+    """JSONL event logger for battle events."""
+
+    def __init__(self, event_file: str):
+        self.event_file = event_file
+        self.seq = 0
+
+    def log(self, event: str, payload: Optional[Dict[str, Any]] = None) -> None:
+        self.seq += 1
+        record = {
+            "seq": self.seq,
+            "ts": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "event": event,
+            "payload": payload or {},
+        }
+        with open(self.event_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _snapshot_pet(ctx: "BattleContext", pet: PetInstance) -> Dict[str, Any]:
+    auras = {}
+    for aura_id, aura in ctx.aura.list_owner(pet.id).items():
+        auras[int(aura_id)] = {
+            "remaining_duration": int(aura.remaining_duration),
+            "stacks": int(aura.stacks),
+            "caster_pet_id": int(aura.caster_pet_id),
+            "source_effect_id": int(aura.source_effect_id),
+            "tickdown_first_round": bool(aura.tickdown_first_round),
+            "just_applied": bool(aura.just_applied),
+        }
+    return {
+        "pet_id": int(pet.id),
+        "name": pet.name_zh,
+        "hp": int(pet.hp),
+        "max_hp": int(pet.max_hp),
+        "alive": bool(pet.alive),
+        "power": int(pet.power),
+        "speed": int(pet.speed),
+        "states": ctx.states.snapshot_pet(pet.id),
+        "auras": auras,
+    }
+
+
+def _diff_snapshot(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
+    diff: Dict[str, Any] = {}
+    for k in ("hp", "max_hp", "alive", "power", "speed"):
+        if before.get(k) != after.get(k):
+            b = before.get(k)
+            a = after.get(k)
+            entry = {"before": b, "after": a}
+            if isinstance(b, int) and isinstance(a, int):
+                entry["delta"] = a - b
+            diff[k] = entry
+
+    # states diff
+    states_before = before.get("states", {}) or {}
+    states_after = after.get("states", {}) or {}
+    state_changes: Dict[str, Any] = {}
+    for sid in set(states_before.keys()) | set(states_after.keys()):
+        bv = states_before.get(sid, 0)
+        av = states_after.get(sid, 0)
+        if bv != av:
+            state_changes[str(sid)] = {"before": bv, "after": av}
+    if state_changes:
+        diff["states_changed"] = state_changes
+
+    # auras diff
+    a_before = before.get("auras", {}) or {}
+    a_after = after.get("auras", {}) or {}
+    added = {}
+    removed = {}
+    changed = {}
+    for aid in set(a_before.keys()) | set(a_after.keys()):
+        b = a_before.get(aid)
+        a = a_after.get(aid)
+        if b is None and a is not None:
+            added[str(aid)] = a
+        elif a is None and b is not None:
+            removed[str(aid)] = b
+        elif b != a:
+            changed[str(aid)] = {"before": b, "after": a}
+    if added:
+        diff["auras_added"] = added
+    if removed:
+        diff["auras_removed"] = removed
+    if changed:
+        diff["auras_changed"] = changed
+
+    return diff
+
+
 # =============================================================================
 # 随机数生成器
 # =============================================================================
@@ -372,6 +463,7 @@ class BattleContext:
         logger: BattleLogger,
         data_loader: DataLoader,
         seed: Optional[int] = None,
+        event_logger: Optional[EventLogger] = None,
     ):
         self.pets = pets
         self.teams = teams
@@ -387,6 +479,8 @@ class BattleContext:
         self.cooldowns = CooldownManager()
         self.weather = WeatherManager()
         self.event_bus = EventBus()
+        if event_logger is not None:
+            self.event_bus.set_logger(event_logger)
 
         # 解析器
         self.stats = StatsResolver()
@@ -427,6 +521,17 @@ class AbilityExecutor:
     def execute_ability(self, actor: PetInstance, target: PetInstance,
                         ability_id: int, ability_name_zh: str) -> dict:
         """执行技能"""
+        actor_before = _snapshot_pet(self.ctx, actor)
+        target_before = _snapshot_pet(self.ctx, target)
+        self.ctx.event_bus.emit("ABILITY_CAST_START", {
+            "actor_id": actor.id,
+            "actor_name": actor.name_zh,
+            "target_id": target.id,
+            "target_name": target.name_zh,
+            "ability_id": int(ability_id),
+            "ability_name": ability_name_zh,
+            "round_no": int(self.ctx.btl.round_no),
+        })
         # 获取技能信息
         ability_info = self.ctx.data.abilities_data.get(ability_id, {})
         pet_type_enum = ability_info.get('pet_type_enum', actor.pet_type)
@@ -492,6 +597,55 @@ class AbilityExecutor:
             PET_TYPE_NAMES_ZH.get(pet_type_enum, "物理"),
             mult, reason, is_crit
         )
+        self.ctx.event_bus.emit("DAMAGE_APPLIED", {
+            "actor_id": actor.id,
+            "actor_name": actor.name_zh,
+            "target_id": target.id,
+            "target_name": target.name_zh,
+            "ability_id": int(ability_id),
+            "ability_name": ability_name_zh,
+            "round_no": int(self.ctx.btl.round_no),
+            "base_points": int(base_points),
+            "base_damage": int(base_damage),
+            "variance": float(variance),
+            "type_mult": float(mult),
+            "type_reason": reason,
+            "is_crit": bool(is_crit),
+            "actual_damage": int(actual_damage),
+            "target_hp_before": int(hp_before),
+            "target_hp_after": int(target.hp),
+        })
+        actor_after = _snapshot_pet(self.ctx, actor)
+        target_after = _snapshot_pet(self.ctx, target)
+        self.ctx.event_bus.emit("ABILITY_EFFECTS", {
+            "actor_id": actor.id,
+            "target_id": target.id,
+            "ability_id": int(ability_id),
+            "ability_name": ability_name_zh,
+            "round_no": int(self.ctx.btl.round_no),
+            "calc": {
+                "base_points": int(base_points),
+                "base_damage": int(base_damage),
+                "variance": float(variance),
+                "type_mult": float(mult),
+                "type_reason": reason,
+                "is_crit": bool(is_crit),
+                "actual_damage": int(actual_damage),
+            },
+            "actor_before": actor_before,
+            "actor_after": actor_after,
+            "target_before": target_before,
+            "target_after": target_after,
+            "actor_diff": _diff_snapshot(actor_before, actor_after),
+            "target_diff": _diff_snapshot(target_before, target_after),
+        })
+        self.ctx.event_bus.emit("ABILITY_CAST_END", {
+            "actor_id": actor.id,
+            "target_id": target.id,
+            "ability_id": int(ability_id),
+            "round_no": int(self.ctx.btl.round_no),
+            "target_hp": int(target.hp),
+        })
 
         return {
             "ability_id": ability_id,
@@ -618,6 +772,11 @@ def run_battle(
     seed: Optional[int] = None,
     max_rounds: int = 25,
     log_file: Optional[str] = None,
+    ability_slot: int = 1,
+    ability_choices_by_pet: Optional[Dict[int, List[int]]] = None,
+    ability_override_by_pet_slot: Optional[Dict[int, Dict[int, int]]] = None,
+    verbose: bool = True,
+    event_log_file: Optional[str] = None,
 ) -> int:
     """运行战斗
 
@@ -628,7 +787,8 @@ def run_battle(
     返回获胜队伍ID (0或1)，-1为平局
     """
     # 创建日志
-    logger = BattleLogger(log_file=log_file, verbose=True)
+    logger = BattleLogger(log_file=log_file, verbose=verbose)
+    event_logger = EventLogger(event_log_file) if event_log_file else None
 
     # 创建宠物
     pets: Dict[int, PetInstance] = {}
@@ -642,7 +802,19 @@ def run_battle(
         available_breeds = pet_data.get('AvailableBreeds', [3])
         breed_id = available_breeds[0] if available_breeds else 3
 
-        pet = create_pet_from_data(data_loader, pet_id, instance_id, level, rarity_id, breed_id)
+        ability_choices = None
+        if ability_choices_by_pet:
+            ability_choices = ability_choices_by_pet.get(pet_id)
+        pet = create_pet_from_data(
+            data_loader, pet_id, instance_id, level, rarity_id, breed_id, ability_choices=ability_choices
+        )
+        if ability_override_by_pet_slot and pet_id in ability_override_by_pet_slot:
+            overrides = ability_override_by_pet_slot[pet_id]
+            for slot, ability_id in overrides.items():
+                ability_id = int(ability_id)
+                pet.abilities[int(slot)] = ability_id
+                zh_name, en_name = data_loader.get_ability_name(ability_id)
+                pet.ability_names[int(slot)] = {"zh": zh_name, "en": en_name}
         pets[instance_id] = pet
         team0_ids.append(instance_id)
 
@@ -652,7 +824,19 @@ def run_battle(
         available_breeds = pet_data.get('AvailableBreeds', [3])
         breed_id = available_breeds[0] if available_breeds else 3
 
-        pet = create_pet_from_data(data_loader, pet_id, instance_id, level, rarity_id, breed_id)
+        ability_choices = None
+        if ability_choices_by_pet:
+            ability_choices = ability_choices_by_pet.get(pet_id)
+        pet = create_pet_from_data(
+            data_loader, pet_id, instance_id, level, rarity_id, breed_id, ability_choices=ability_choices
+        )
+        if ability_override_by_pet_slot and pet_id in ability_override_by_pet_slot:
+            overrides = ability_override_by_pet_slot[pet_id]
+            for slot, ability_id in overrides.items():
+                ability_id = int(ability_id)
+                pet.abilities[int(slot)] = ability_id
+                zh_name, en_name = data_loader.get_ability_name(ability_id)
+                pet.ability_names[int(slot)] = {"zh": zh_name, "en": en_name}
         pets[instance_id] = pet
         team1_ids.append(instance_id)
 
@@ -662,7 +846,14 @@ def run_battle(
     teams.register_team(1, team1_ids, active_index=0)
 
     # 创建上下文
-    ctx = BattleContext(pets=pets, teams=teams, logger=logger, data_loader=data_loader, seed=seed)
+    ctx = BattleContext(
+        pets=pets,
+        teams=teams,
+        logger=logger,
+        data_loader=data_loader,
+        seed=seed,
+        event_logger=event_logger,
+    )
     executor = AbilityExecutor(ctx)
 
     # 打印战斗信息
@@ -670,6 +861,13 @@ def run_battle(
     logger.log(f"随机种子: {seed}")
     logger.log(f"等级: {level} | 品质: {'蓝色(精良)' if rarity_id == 4 else f'品质{rarity_id}'}")
     logger.log("")
+    ctx.event_bus.emit("BATTLE_START", {
+        "seed": seed,
+        "level": int(level),
+        "rarity_id": int(rarity_id),
+        "team0_pet_ids": team0_pet_ids,
+        "team1_pet_ids": team1_pet_ids,
+    })
 
     logger.log("队伍0:")
     for pid in team0_ids:
@@ -708,6 +906,11 @@ def run_battle(
         ctx.racial.on_round_start(ctx, all_pets)
 
         logger.round_start(round_no)
+        ctx.event_bus.emit("ROUND_START", {
+            "round_no": int(round_no),
+            "weather": int(ctx.btl.current_weather),
+            "weather_duration": int(ctx.btl.weather_duration),
+        })
 
         # 显示天气
         if ctx.btl.current_weather != 0:
@@ -741,6 +944,14 @@ def run_battle(
                 first_name = pet1.name_zh
 
         logger.speed_info(pet0.name_zh, speed0, pet1.name_zh, speed1, first_name)
+        ctx.event_bus.emit("TURN_ORDER", {
+            "round_no": int(round_no),
+            "pet0_id": int(pet0.id),
+            "pet1_id": int(pet1.id),
+            "pet0_speed": int(speed0),
+            "pet1_speed": int(speed1),
+            "first_name": first_name,
+        })
 
         # 执行行动
         for team_id, actor, target in order:
@@ -756,10 +967,14 @@ def run_battle(
                     continue
 
             # 使用第一个技能
-            ability_slot = 1
-            ability_id = actor.abilities.get(ability_slot, 0)
+            slot = int(ability_slot)
+            if slot < 1:
+                slot = 1
+            elif slot > 3:
+                slot = 3
+            ability_id = actor.abilities.get(slot, 0)
             if ability_id:
-                ability_name_zh = actor.ability_names.get(ability_slot, {}).get('zh', '未知技能')
+                ability_name_zh = actor.ability_names.get(slot, {}).get('zh', '未知技能')
                 logger.log(f"  {actor.name_zh} 使用 [{ability_name_zh}]:")
 
                 result = executor.execute_ability(actor, target, ability_id, ability_name_zh)
@@ -769,6 +984,12 @@ def run_battle(
                     revived = ctx.racial.on_pet_death(ctx, target)
                     passive_name = RACIAL_PASSIVE_DESC_ZH.get(target.pet_type, "").split("：")[0]
                     logger.pet_death(target.name_zh, revived, passive_name)
+                    ctx.event_bus.emit("PET_DEATH", {
+                        "pet_id": int(target.id),
+                        "pet_name": target.name_zh,
+                        "revived": bool(revived),
+                        "passive": passive_name,
+                    })
 
         # 显示回合结束状态
         logger.log(f"  ── 回合结束状态 ──")
@@ -778,6 +999,11 @@ def run_battle(
             if pet:
                 status = f"HP:{pet.hp}/{pet.max_hp}" if pet.alive else "已阵亡"
                 logger.log(f"  队伍{tid}: {pet.name_zh} {status}")
+        ctx.event_bus.emit("ROUND_END", {
+            "round_no": int(round_no),
+            "team0_active_id": int(teams.active_pet_id(0)),
+            "team1_active_id": int(teams.active_pet_id(1)),
+        })
 
         # 回合结束处理
         ctx.racial.on_round_end(ctx, all_pets)
@@ -788,16 +1014,24 @@ def run_battle(
             logger.log("")
             logger.header(f"战斗结束 - 队伍{winner}获胜!")
             logger.log(f"日志已保存到: {logger.log_file}")
+            ctx.event_bus.emit("BATTLE_END", {
+                "winner": int(winner),
+                "reason": "all_dead",
+            })
             return winner
 
         # 确保激活宠物存活
         for tid in [0, 1]:
-            if ensure_active_alive(teams, pets, tid, logger):
+            if ensure_active_alive(teams, pets, tid, logger, ctx=ctx):
                 pass
 
     logger.log("")
     logger.header("战斗结束 - 平局 (回合上限)")
     logger.log(f"日志已保存到: {logger.log_file}")
+    ctx.event_bus.emit("BATTLE_END", {
+        "winner": -1,
+        "reason": "round_limit",
+    })
     return -1
 
 
@@ -812,7 +1046,7 @@ def find_alive_pet(teams: TeamManager, pets: Dict[int, PetInstance], team_id: in
 
 
 def ensure_active_alive(teams: TeamManager, pets: Dict[int, PetInstance],
-                        team_id: int, logger: BattleLogger) -> bool:
+                        team_id: int, logger: BattleLogger, ctx: Optional[BattleContext] = None) -> bool:
     """确保激活宠物存活"""
     team = teams.teams[team_id]
     active_id = teams.active_pet_id(team_id)
@@ -830,6 +1064,13 @@ def ensure_active_alive(teams: TeamManager, pets: Dict[int, PetInstance],
         if pet and pet.alive:
             team.active_index = idx
             logger.swap(f"队伍{team_id}", old_name, pet.name_zh, forced=True)
+            if ctx is not None:
+                ctx.event_bus.emit("PET_SWAP", {
+                    "team_id": int(team_id),
+                    "old_pet_name": old_name,
+                    "new_pet_name": pet.name_zh,
+                    "forced": True,
+                })
             return True
 
     return False
