@@ -145,7 +145,7 @@ def analyze_special_skills():
                     'duration': '应记录aura剩余回合数'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查aura是否被应用且duration正确'
+                    f'T{t_str}: 检查aura是否被应用且duration正确'
                 )
             elif t == 'state':
                 rule['expected_effects'].append({
@@ -154,7 +154,7 @@ def analyze_special_skills():
                     'detail': '应记录状态类型和持续回合'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查state是否被设置且持续时间正确'
+                    f'T{t_str}: 检查state是否被设置且持续时间正确'
                 )
             elif t == 'periodic':
                 rule['expected_effects'].append({
@@ -163,7 +163,7 @@ def analyze_special_skills():
                     'detail': '应记录每回合伤害值和持续回合'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查DOT是否在后续回合正确触发'
+                    f'T{t_str}: 检查DOT是否在后续回合正确触发'
                 )
             elif t == 'heal':
                 rule['expected_effects'].append({
@@ -172,7 +172,7 @@ def analyze_special_skills():
                     'detail': '应记录治疗量和溢出处理'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查heal是否正确应用'
+                    f'T{t_str}: 检查heal是否正确应用'
                 )
             elif t == 'control':
                 rule['expected_effects'].append({
@@ -181,7 +181,7 @@ def analyze_special_skills():
                     'detail': '应记录控制类型和持续回合'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查control效果是否阻止行动'
+                    f'T{t_str}: 检查control效果是否阻止行动'
                 )
             elif t == 'weather':
                 rule['expected_effects'].append({
@@ -190,7 +190,7 @@ def analyze_special_skills():
                     'detail': '应记录天气类型和持续回合'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查weather是否正确应用'
+                    f'T{t_str}: 检查weather是否正确应用'
                 )
             elif t == 'resurrect':
                 rule['expected_effects'].append({
@@ -199,16 +199,16 @@ def analyze_special_skills():
                     'detail': '应记录复活HP百分比'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查resurrect是否复活目标'
+                    f'T{t_str}: 检查resurrect是否复活目标'
                 )
             else:
                 rule['expected_effects'].append({
                     'type': t,
-                    'check': f'T{t:03d}应产生预期效果',
+                    'check': f'T{t_str}应产生预期效果',
                     'detail': '需要人工验证'
                 })
                 rule['verification_check'].append(
-                    f'T{t:03d}: 检查{t}效果'
+                    f'T{t_str}: 检查{t}效果'
                 )
 
         rules['top_50_skills'].append(rule)
