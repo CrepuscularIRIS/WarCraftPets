@@ -183,7 +183,8 @@ def generate_implementation_plan(unimplemented):
         }
         plan['implementations_needed'].append(impl)
 
-    print(f'  - Plan generated for {len(plan[\"implementations_needed\"])} skills')
+    impl_count = len(plan['implementations_needed'])
+    print(f'  - Plan generated for {impl_count} skills')
 
     return plan
 
