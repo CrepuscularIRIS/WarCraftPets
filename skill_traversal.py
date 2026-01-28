@@ -166,6 +166,7 @@ class BattleSimulator:
         self.aura_state = AuraState()
         self.turn = 0
         self.battle_log: List[str] = []
+        self.summoned_units: List[Dict] = []  # 跟踪召唤单位
 
     def log(self, message: str):
         self.battle_log.append(f"[T{self.turn}] {message}")
