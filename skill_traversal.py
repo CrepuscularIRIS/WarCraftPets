@@ -115,6 +115,17 @@ SKILL_CATALOG = {
 }
 
 
+# 全局Aura ID生成器，用于生成唯一ID
+_aura_id_counter = 1000
+
+
+def generate_unique_aura_id(skill_id: str) -> int:
+    """生成唯一的aura ID，包含技能ID信息"""
+    global _aura_id_counter
+    _aura_id_counter += 1
+    return _aura_id_counter
+
+
 class AuraState:
     """简化的Aura状态"""
     def __init__(self):
