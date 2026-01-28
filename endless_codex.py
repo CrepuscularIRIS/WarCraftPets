@@ -271,7 +271,7 @@ def generate_rule_verification_template(rules):
     with open('logs/reports/rule_verification_template.json', 'w', encoding='utf-8') as f:
         json.dump(template, f, indent=2, ensure_ascii=False)
 
-    print(f'  - Template saved with {len(template[\"template\"])} skills')
+    print(f'  - Template saved with {len(template["template"])} skills')
 
 def main():
     print('='*70)
@@ -344,8 +344,10 @@ def main():
             print(f'Total time: {elapsed/60:.1f}min')
             print(f'Opcode mapped: {len(opcode_mapping)}')
             if rules:
-                print(f'Special skills: {len(rules.get(\"top_50_skills\", []))}')
-                print(f'Verification rules: {len(rules.get(\"verification_rules\", []))}')
+                top_50 = rules.get('top_50_skills', [])
+                print(f'Special skills: {len(top_50)}')
+                v_rules = rules.get('verification_rules', [])
+                print(f'Verification rules: {len(v_rules)}')
             print('Continuing...')
 
 if __name__ == '__main__':
