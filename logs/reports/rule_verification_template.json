@@ -1,0 +1,639 @@
+{
+  "description": "特殊技能规则对账模板",
+  "generated_at": "2026-01-28T20:09:25.245438",
+  "rules_summary": {
+    "total_skills": 50,
+    "total_checks": 79
+  },
+  "template": [
+    {
+      "ability_id": 7,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 77,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tcontrol: 检查control效果是否阻止行动"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 82,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 83,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 85,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 135,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tcontrol: 检查control效果是否阻止行动"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 152,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 155,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 156,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 157,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 78,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 80,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 87,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 134,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 157,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 158,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 159,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 162,
+      "name": "",
+      "auto_checks": [
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 165,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 77,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tcontrol: 检查control效果是否阻止行动"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 121,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tlifesteal: 检查lifesteal效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 135,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tcontrol: 检查control效果是否阻止行动"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 159,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 160,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tlifesteal: 检查lifesteal效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 170,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 179,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 184,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 186,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "auto_checks": [
+        "Tcontrol: 检查control效果是否阻止行动",
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 165,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 169,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 175,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 209,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 225,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确",
+        "Tunknown: 检查unknown效果"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 226,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 233,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 292,
+      "name": "",
+      "auto_checks": [
+        "Tbuff: 检查buff效果",
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 302,
+      "name": "",
+      "auto_checks": [
+        "Tstate: 检查state是否被设置且持续时间正确"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 70,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 72,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 123,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 149,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 168,
+      "name": "",
+      "auto_checks": [
+        "Tdebuff: 检查debuff效果",
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 173,
+      "name": "",
+      "auto_checks": [
+        "Tdebuff: 检查debuff效果",
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 211,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 230,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用",
+        "Tweather: 检查weather是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 234,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    },
+    {
+      "ability_id": 246,
+      "name": "",
+      "auto_checks": [
+        "Theal: 检查heal是否正确应用"
+      ],
+      "manual_checks": [
+        "验证实际游戏效果是否符合预期",
+        "检查数值是否在合理范围内",
+        "确认触发条件和时机正确"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "timestamp": "2026-01-28T20:09:55.684706",
+  "total_rules": 50,
+  "results": [
+    {
+      "ability_id": 7,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 77,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 82,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 83,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 85,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 135,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 152,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 155,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 156,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 157,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 78,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 80,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 87,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "ability_id": 134,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 157,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 158,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 159,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 162,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 165,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 77,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "ability_id": 121,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 135,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 159,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 160,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 170,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 179,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 184,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 186,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 120,
+      "name": "",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "ability_id": 165,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 169,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 175,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 209,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 225,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 226,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 233,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 292,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 302,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 70,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 72,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 123,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 149,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 168,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 173,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 211,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 230,
+      "name": "",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "ability_id": 234,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "ability_id": 246,
+      "name": "",
+      "passed": 1,
+      "failed": 0
+    }
+  ],
+  "summary": {
+    "total_passed": 79,
+    "total_failed": 0
+  }
+}
