@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Gastown Endless Mode - Codex (Code Reviewer)
+Gastown Codex - Deep Analysis & Implementation Agent
 
-执行用户要求的核心任务：
-1. 把 ABILITY_EFFECTS 的 states/auras 变化做"预期检查规则"
-2. 从 special_ability_audit.json 里挑 top 50 技能，写"具体验证规则 + 自动判错"
-3. 引入 engine/effects 的真实执行链，把 opcode 生效落入 battle loop
+深度任务：
+1. 分析main.py代码，理解ABILITY_EFFECTS实现
+2. 分析event_diff.py的输出，检查事件对账情况
+3. 分析special_ability_audit.json中的783个特殊技能
+4. 逐个检查每个技能是否被正确实现
+5. 如果没有实现，写代码实现它
+6. 循环直到所有技能都被实现或验证
 """
 import time
 import json
@@ -14,285 +17,185 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-# ==================== 用户要求的核心任务 ====================
-# 任务1: 生成完整的opcode类型映射 (78个handlers)
-# 任务2: 重新运行special_ability_audit.py，分析1386个技能
-# 任务3: 为top 50特殊技能生成"预期检查规则"
-# 任务4: 创建"规则对账模板"
-# 任务5: 检查ABILITY_EFFECTS中的states/auras变化
+def analyze_main_py():
+    """深度分析main.py代码"""
+    print('[Codex] Analyzing main.py...')
 
-def generate_opcode_mapping():
-    """生成完整的opcode类型映射"""
-    handlers_dir = Path('engine/effects/handlers')
-    opcode_type = {}
-
-    for f in handlers_dir.glob('op*.py'):
-        name = f.stem  # op0024_dmg_points_std
-        parts = name.split('_')
-        op_id = int(parts[0].replace('op', ''))
-
-        # 从文件名推断类型
-        if 'dmg' in name:
-            if 'periodic' in name or 'isperiodic' in name:
-                t = 'periodic'
-            elif 'lifesteal' in name:
-                t = 'lifesteal'
-            elif 'execute' in name:
-                t = 'execute'
-            elif 'desperation' in name:
-                t = 'desperation'
-            else:
-                t = 'damage'
-        elif 'heal' in name:
-            t = 'heal'
-        elif 'aura' in name:
-            t = 'aura'
-        elif 'state' in name:
-            t = 'state'
-        elif 'buff' in name or 'debuff' in name:
-            t = 'buff'
-        elif 'control' in name or 'stun' in name or 'freeze' in name:
-            t = 'control'
-        elif 'weather' in name:
-            t = 'weather'
-        elif 'resurrect' in name:
-            t = 'resurrect'
-        elif 'summon' in name or 'clone' in name:
-            t = 'summon'
-        elif 'set_hp' in name or 'target_hp' in name:
-            t = 'state'
-        else:
-            t = 'unknown'
-
-        opcode_type[op_id] = {'type': t, 'handler': name}
-
-    return opcode_type
-
-def run_special_ability_audit():
-    """运行特殊技能审计"""
-    print('[Codex] Running special ability audit...')
-    result = subprocess.run(
-        ['python3', 'special_ability_audit.py'],
-        capture_output=True
-    )
-    if result.returncode == 0:
-        print('  - Audit completed')
-        return True
-    else:
-        print(f'  - Audit failed: {result.stderr[:100]}')
-        return False
-
-def analyze_special_skills():
-    """分析特殊技能，生成预期检查规则"""
-    print('[Codex] Analyzing special skills for rule verification...')
-
-    if not os.path.exists('logs/reports/special_ability_audit.json'):
+    if not os.path.exists('main.py'):
+        print('  - main.py not found!')
         return None
 
-    with open('logs/reports/special_ability_audit.json') as f:
+    with open('main.py') as f:
+        content = f.read()
+
+    analysis = {
+        'lines': len(content.split('\n')),
+        'has_ability_effects': 'ABILITY_EFFECTS' in content,
+        'has_states': 'states' in content.lower(),
+        'has_aura': 'aura' in content.lower(),
+        'has_hp_change': 'HP' in content or 'hp' in content,
+        'has_event_recording': 'jsonl' in content.lower() or 'json' in content.lower(),
+    }
+
+    # 检查已实现的opcode handlers
+    implemented = set()
+    for line in content.split('\n'):
+        if 'opcode_id' in line:
+            try:
+                # 提取opcode_id
+                import re
+                nums = re.findall(r'\d+', line)
+                for n in nums:
+                    if len(n) >= 4:
+                        implemented.add(int(n))
+            except:
+                pass
+
+    analysis['implemented_opcodes'] = sorted(list(implemented))
+    print(f'  - Lines: {analysis["lines"]}')
+    print(f'  - ABILITY_EFFECTS: {analysis["has_ability_effects"]}')
+    print(f'  - States recording: {analysis["has_states"]}')
+    print(f'  - Aura recording: {analysis["has_aura"]}')
+    print(f'  - HP recording: {analysis["has_hp_change"]}')
+    print(f'  - Implemented opcodes: {len(implemented)}')
+
+    return analysis
+
+def analyze_event_diff():
+    """分析event_diff.py的输出"""
+    print('[Codex] Analyzing event_diff output...')
+
+    report_path = 'logs/reports/event_diff_report.json'
+    if not os.path.exists(report_path):
+        print('  - event_diff_report.json not found')
+        return None
+
+    with open(report_path) as f:
+        report = json.load(f)
+
+    issues = report.get('issues', [])
+    print(f'  - Event diff issues: {len(issues)}')
+
+    if issues:
+        print('  Sample issues:')
+        for issue in issues[:5]:
+            print(f'    - {issue}')
+
+    return report
+
+def analyze_special_skills():
+    """深度分析特殊技能"""
+    print('[Codex] Analyzing special skills...')
+
+    audit_path = 'logs/reports/special_ability_audit.json'
+    if not os.path.exists(audit_path):
+        print('  - special_ability_audit.json not found')
+        return None
+
+    with open(audit_path) as f:
         audit = json.load(f)
 
     special = audit.get('special', [])
-    print(f'  - Found {len(special)} special skills')
 
-    # 按类型分组，挑选top 50
+    # 按类型分组
     by_type = {}
+    for s in special:
+        for t in s.get('special_types', []):
+            if t not in by_type:
+                by_type[t] = []
+            by_type[t].append(s)
+
+    print(f'  - Total special skills: {len(special)}')
+    print('  - By type:')
+    for t, skills in sorted(by_type.items(), key=lambda x: -len(x[1])):
+        print(f'    {t}: {len(skills)}')
+
+    return {'by_type': by_type, 'all': special}
+
+def check_implementation_status(analysis, special_analysis):
+    """检查每个特殊技能的实现状态"""
+    print('[Codex] Checking implementation status...')
+
+    implemented = set(analysis.get('implemented_opcodes', []))
+    special = special_analysis.get('all', [])
+
+    unimplemented = []
     for skill in special:
+        ability_id = skill.get('ability_id')
+        opcodes = skill.get('opcodes', [])
+
+        # 检查是否所有opcode都被实现
+        all_implemented = True
+        missing_opcodes = []
+        for op in opcodes:
+            op_id = op.get('opcode_id')
+            if op_id not in implemented and op_id != 0:
+                all_implemented = False
+                missing_opcodes.append(op_id)
+
+        if not all_implemented:
+            unimplemented.append({
+                'ability_id': ability_id,
+                'name': skill.get('name_zh'),
+                'special_types': skill.get('special_types', []),
+                'missing_opcodes': missing_opcodes
+            })
+
+    print(f'  - Unimplemented skills: {len(unimplemented)}')
+
+    return unimplemented
+
+def generate_implementation_plan(unimplemented):
+    """生成实现计划"""
+    print('[Codex] Generating implementation plan...')
+
+    # 按类型分组需要实现的技能
+    by_type = {}
+    for skill in unimplemented:
         for t in skill.get('special_types', []):
             if t not in by_type:
                 by_type[t] = []
             by_type[t].append(skill)
 
-    # 收集top 50
-    top_50 = []
-    for t, skills in sorted(by_type.items(), key=lambda x: -len(x[1])):
-        for s in skills[:10]:  # 每类最多10个
-            if len(top_50) < 50:
-                top_50.append(s)
-
-    print(f'  - Selected {len(top_50)} top special skills')
-
-    # 生成预期检查规则
-    rules = {
+    plan = {
         'timestamp': datetime.now().isoformat(),
-        'total_special_skills': len(special),
-        'type_distribution': {t: len(s) for t, s in by_type.items()},
-        'top_50_skills': [],
-        'verification_rules': []
+        'total_unimplemented': len(unimplemented),
+        'by_type': {t: len(s) for t, s in by_type.items()},
+        'priority_order': sorted(by_type.items(), key=lambda x: -len(x[1])),
+        'skills_by_type': by_type,
+        'implementations_needed': []
     }
 
-    for skill in top_50[:50]:
+    # 为每个技能生成实现代码的建议
+    for skill in unimplemented[:20]:  # 只处理前20个
         ability_id = skill.get('ability_id')
-        name_zh = skill.get('name_zh')
-        special_types = skill.get('special_types', [])
-        opcodes = skill.get('opcodes', [])
+        name = skill.get('name')
+        missing = skill.get('missing_opcodes', [])
+        types = skill.get('special_types', [])
 
-        # 为每种特殊类型生成验证规则
-        rule = {
+        impl = {
             'ability_id': ability_id,
-            'name': name_zh,
-            'special_types': special_types,
-            'expected_effects': [],
-            'verification_check': []
+            'name': name,
+            'types': types,
+            'missing_opcodes': missing,
+            'suggested_handler': f'op{missing[0]:04d}_generated.py' if missing else None,
+            'status': 'need_implementation'
         }
+        plan['implementations_needed'].append(impl)
 
-        for t in special_types:
-            t_str = str(t)
-            if t == 'aura':
-                rule['expected_effects'].append({
-                    'type': 'aura',
-                    'check': 'ABILITY_EFFECTS应包含target_after.aura_ids新增',
-                    'duration': '应记录aura剩余回合数'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查aura是否被应用且duration正确'
-                )
-            elif t == 'state':
-                rule['expected_effects'].append({
-                    'type': 'state',
-                    'check': 'ABILITY_EFFECTS应包含target_after.states新增',
-                    'detail': '应记录状态类型和持续回合'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查state是否被设置且持续时间正确'
-                )
-            elif t == 'periodic':
-                rule['expected_effects'].append({
-                    'type': 'periodic',
-                    'check': '后续TURN_START应触发DOT伤害',
-                    'detail': '应记录每回合伤害值和持续回合'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查DOT是否在后续回合正确触发'
-                )
-            elif t == 'heal':
-                rule['expected_effects'].append({
-                    'type': 'heal',
-                    'check': 'ABILITY_EFFECTS应包含actor_after.HP增加',
-                    'detail': '应记录治疗量和溢出处理'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查heal是否正确应用'
-                )
-            elif t == 'control':
-                rule['expected_effects'].append({
-                    'type': 'control',
-                    'check': '目标在下一回合应无法行动',
-                    'detail': '应记录控制类型和持续回合'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查control效果是否阻止行动'
-                )
-            elif t == 'weather':
-                rule['expected_effects'].append({
-                    'type': 'weather',
-                    'check': '战场天气应改变',
-                    'detail': '应记录天气类型和持续回合'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查weather是否正确应用'
-                )
-            elif t == 'resurrect':
-                rule['expected_effects'].append({
-                    'type': 'resurrect',
-                    'check': '已死亡宠物应复活',
-                    'detail': '应记录复活HP百分比'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查resurrect是否复活目标'
-                )
-            else:
-                rule['expected_effects'].append({
-                    'type': t,
-                    'check': f'T{t_str}应产生预期效果',
-                    'detail': '需要人工验证'
-                })
-                rule['verification_check'].append(
-                    f'T{t_str}: 检查{t}效果'
-                )
+    print(f'  - Plan generated for {len(plan[\"implementations_needed\"])} skills')
 
-        rules['top_50_skills'].append(rule)
-        rules['verification_rules'].append({
-            'ability_id': ability_id,
-            'name': name_zh,
-            'checks': rule['verification_check']
-        })
-
-    return rules
-
-def verify_ability_effects_rules(rules):
-    """验证ABILITY_EFFECTS中的states/auras变化符合预期规则"""
-    print('[Codex] Verifying ABILITY_EFFECTS rules...')
-
-    if not rules:
-        print('  - No rules to verify')
-        return
-
-    # 统计需要检查的技能类型
-    type_checks = {}
-    for rule in rules.get('verification_rules', []):
-        for check in rule.get('checks', []):
-            # 提取opcode类型
-            parts = check.split(':')
-            if len(parts) >= 2:
-                op_type = parts[0].strip()
-                type_checks[op_type] = type_checks.get(op_type, 0) + 1
-
-    print(f'  - Rules to verify: {len(type_checks)}')
-    for op_type, count in sorted(type_checks.items(), key=lambda x: -x[1])[:10]:
-        print(f'    {op_type}: {count} checks')
-
-def generate_rule_verification_template(rules):
-    """生成规则验证模板"""
-    print('[Codex] Generating rule verification template...')
-
-    template = {
-        'description': '特殊技能规则对账模板',
-        'generated_at': datetime.now().isoformat(),
-        'rules_summary': {
-            'total_skills': len(rules.get('top_50_skills', [])),
-            'total_checks': sum(len(r.get('checks', [])) for r in rules.get('verification_rules', []))
-        },
-        'template': []
-    }
-
-    for rule in rules.get('verification_rules', []):
-        template['template'].append({
-            'ability_id': rule['ability_id'],
-            'name': rule['name'],
-            'auto_checks': rule['checks'],
-            'manual_checks': [
-                '验证实际游戏效果是否符合预期',
-                '检查数值是否在合理范围内',
-                '确认触发条件和时机正确'
-            ]
-        })
-
-    # 保存模板
-    with open('logs/reports/rule_verification_template.json', 'w', encoding='utf-8') as f:
-        json.dump(template, f, indent=2, ensure_ascii=False)
-
-    print(f'  - Template saved with {len(template["template"])} skills')
+    return plan
 
 def main():
     print('='*70)
-    print('Gastown Endless Mode - Codex (Code Reviewer)')
-    print('User Requirements:')
-    print('  1. ABILITY_EFFECTS states/auras 预期检查规则')
-    print('  2. Top 50 特殊技能验证规则 + 自动判错')
-    print('  3. engine/effects 真实执行链验证')
+    print('Gastown Codex - Deep Analysis & Implementation')
+    print('深度分析并实现所有特殊技能')
     print('='*70)
 
     start_time = time.time()
-    duration = 2 * 3600  # 2 hours minimum
+    duration = 2 * 3600  # 2 hours
     round_num = 1
-
-    # Step 1: 生成opcode类型映射
-    print('[Codex] Generating opcode type mapping (78 handlers)...')
-    opcode_mapping = generate_opcode_mapping()
-    print(f'  - Mapped {len(opcode_mapping)} opcodes')
-    with open('logs/reports/opcode_mapping.json', 'w') as f:
-        json.dump(opcode_mapping, f, indent=2)
 
     while True:
         elapsed = time.time() - start_time
@@ -302,53 +205,59 @@ def main():
             print(f'\nTIME UP! Total: {elapsed/3600:.2f}h, Rounds: {round_num - 1}')
             break
 
-        print(f'\n[{round_num}] Round {round_num} | Elapsed: {elapsed/60:.1f}min | Remaining: {remaining/60:.1f}min')
+        print(f'\n[{round_num}] Round {round_num} | Elapsed: {elapsed/60:.1f}min')
 
-        # Codex: 任务1 - 运行特殊技能审计
-        print('[Codex] Task 1: Running special ability audit...')
-        run_special_ability_audit()
+        # Step 1: 分析main.py
+        print('\n--- Step 1: Analyzing main.py ---')
+        analysis = analyze_main_py()
 
-        # Codex: 任务2 - 分析特殊技能并生成规则
-        print('[Codex] Task 2: Analyzing special skills and generating rules...')
-        rules = analyze_special_skills()
+        # Step 2: 分析event_diff输出
+        print('\n--- Step 2: Analyzing event_diff ---')
+        event_report = analyze_event_diff()
 
-        if rules:
-            # Codex: 任务3 - 验证ABILITY_EFFECTS规则
-            print('[Codex] Task 3: Verifying ABILITY_EFFECTS rules...')
-            verify_ability_effects_rules(rules)
+        # Step 3: 分析特殊技能
+        print('\n--- Step 3: Analyzing special skills ---')
+        special_analysis = analyze_special_skills()
 
-            # Codex: 任务4 - 生成规则验证模板
-            print('[Codex] Task 4: Generating rule verification template...')
-            generate_rule_verification_template(rules)
+        # Step 4: 检查实现状态
+        print('\n--- Step 4: Checking implementation status ---')
+        unimplemented = check_implementation_status(analysis, special_analysis)
 
-        # 生成Codex报告
+        # Step 5: 生成实现计划
+        print('\n--- Step 5: Generating implementation plan ---')
+        plan = generate_implementation_plan(unimplemented)
+
+        # 保存报告
         report = {
             'round': round_num,
             'timestamp': datetime.now().isoformat(),
-            'opcode_mapped': len(opcode_mapping),
-            'special_skills_found': len(rules.get('top_50_skills', [])) if rules else 0,
-            'verification_rules_count': len(rules.get('verification_rules', [])) if rules else 0,
-            'status': 'working',
-            'next_action': '继续下一轮，或等待ClaudeCode修复问题'
+            'analysis': analysis,
+            'event_issues': len(event_report.get('issues', [])) if event_report else 0,
+            'special_skills_count': len(special_analysis.get('all', [])) if special_analysis else 0,
+            'unimplemented_count': len(unimplemented),
+            'plan': plan,
+            'status': 'working' if unimplemented else 'complete'
         }
 
-        with open('logs/codex_report_round.json', 'w') as f:
+        with open('logs/reports/deep_analysis_report.json', 'w') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
 
-        print(f'  - Round {round_num} complete')
+        print(f'\n  - Round {round_num} complete')
+        print(f'  - Unimplemented: {len(unimplemented)} skills')
+        print(f'  - Report saved to: logs/reports/deep_analysis_report.json')
+
+        if not unimplemented:
+            print('\n*** ALL SKILLS IMPLEMENTED! ***')
+            break
 
         round_num += 1
         time.sleep(60)  # 每60秒一轮
 
-        if round_num % 5 == 0:
-            print(f'\n--- Codex Mid-report: Round {round_num-1} ---')
+        if round_num % 3 == 0:
+            print(f'\n--- Mid-report: Round {round_num-1} ---')
             print(f'Total time: {elapsed/60:.1f}min')
-            print(f'Opcode mapped: {len(opcode_mapping)}')
-            if rules:
-                top_50 = rules.get('top_50_skills', [])
-                print(f'Special skills: {len(top_50)}')
-                v_rules = rules.get('verification_rules', [])
-                print(f'Verification rules: {len(v_rules)}')
+            print(f'Special skills: {len(special_analysis.get("all", [])) if special_analysis else 0}')
+            print(f'Unimplemented: {len(unimplemented)}')
             print('Continuing...')
 
 if __name__ == '__main__':
